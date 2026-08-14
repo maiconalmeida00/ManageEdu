@@ -1,0 +1,89 @@
+# ==========================================
+# SEGURANÇA 
+# ==========================================
+*.env
+.env
+.env.production
+.env.prd
+.env.local
+.env.*.local
+application.properties
+secrets/
+
+# ==========================================
+# BACKEND - Java / Spring Boot / Maven
+# ==========================================
+
+# Build
+backend/target/
+backend/*.jar
+backend/*.war
+
+# Maven wrapper
+!backend/mvnw
+!backend/mvnw.cmd
+backend/.mvn/
+
+# IntelliJ IDEA
+backend/.idea/
+backend/*.iml
+backend/*.iws
+backend/*.ipr
+
+# Eclipse
+backend/.classpath
+backend/.project
+backend/.settings/
+
+# VS Code
+backend/.vscode/
+
+# Logs
+backend/logs/
+backend/*.log
+
+# ==========================================
+# FRONTEND - Node / Vite / React
+# ==========================================
+
+# Dependências
+frontend/node_modules/
+
+# Build
+frontend/out/
+
+# Envs sensíveis
+frontend/.env.production
+frontend/.env.prd
+frontend/.env.local
+frontend/.env.*.local
+
+# Cache Vite
+frontend/.vite/
+
+# TypeScript
+frontend/*.tsbuildinfo
+
+# VS Code
+frontend/.vscode/
+
+# Logs
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+frontend/pnpm-debug.log*
+
+# ==========================================
+# GERAL
+# ==========================================
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+*.swp
+*.swo
+*.bak
+*.tmp
