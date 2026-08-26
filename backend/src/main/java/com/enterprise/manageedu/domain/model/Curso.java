@@ -1,13 +1,44 @@
 package com.enterprise.manageedu.domain.model;
 
-public class Curso {
-    private Long id;
-    private String nome;
-    private String modalidade;
-    private String turno;
+import jakarta.persistence.*;
 
-    public Curso(Long id, String nome, String modalidade, String turno) {
-        this.id = id;
+@Entity
+@Table(name = "curso")
+public class Curso {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "nome", nullable = false, length = 120)
+    private String nome;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "modalidade", nullable = false, length = 20)
+    private ModalidadeCurso modalidade;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "turno", nullable = false, length = 20)
+    private TurnoCurso turno;
+
+    protected Curso() {
+    }
+
+    public Curso(
+            String nome,
+            ModalidadeCurso modalidade,
+            TurnoCurso turno
+    ) {
+        this.nome = nome;
+        this.modalidade = modalidade;
+        this.turno = turno;
+    }
+
+    public void atualizarDados(
+            String nome,
+            ModalidadeCurso modalidade,
+            TurnoCurso turno
+    ) {
         this.nome = nome;
         this.modalidade = modalidade;
         this.turno = turno;
@@ -21,11 +52,11 @@ public class Curso {
         return nome;
     }
 
-    public String getModalidade() {
+    public ModalidadeCurso getModalidade() {
         return modalidade;
     }
 
-    public String getTurno() {
+    public TurnoCurso getTurno() {
         return turno;
     }
 }

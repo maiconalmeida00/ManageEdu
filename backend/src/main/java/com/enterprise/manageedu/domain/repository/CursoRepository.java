@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface CursoRepository {
-    Curso salvar(Curso lead);
+    Curso salvar(Curso curso);
     Optional<Curso> buscarPorId(Long id);
     List<Curso> listarTodos();
     void remover(Long id);

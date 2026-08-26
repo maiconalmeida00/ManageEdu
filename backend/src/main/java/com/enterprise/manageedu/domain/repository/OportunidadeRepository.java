@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface OportunidadeRepository {
-    OportunidadeMatricula salvar(OportunidadeMatricula lead);
+    OportunidadeMatricula salvar(OportunidadeMatricula oportunidade);
     Optional<OportunidadeMatricula> buscarPorId(Long id);
     List<OportunidadeMatricula> listarTodos();
     void remover(Long id);

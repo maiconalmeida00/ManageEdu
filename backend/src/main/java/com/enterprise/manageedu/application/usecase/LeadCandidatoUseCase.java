@@ -2,11 +2,14 @@ package com.enterprise.manageedu.application.usecase;
 
 import com.enterprise.manageedu.application.dto.LeadCandidatoRequestDTO;
 import com.enterprise.manageedu.application.dto.LeadCandidatoResponseDTO;
+import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
+import com.enterprise.manageedu.domain.model.Curso;
 import com.enterprise.manageedu.domain.model.LeadCandidato;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -16,32 +19,36 @@ public class LeadCandidatoUseCase {
     private final LeadRepository leadRepository;
     private final CursoRepository cursoRepository;
 
-    public LeadCandidatoUseCase(LeadRepository leadRepository, CursoRepository cursoRepository) {
+    public LeadCandidatoUseCase(
+            LeadRepository leadRepository,
+            CursoRepository cursoRepository
+    ) {
         this.leadRepository = leadRepository;
         this.cursoRepository = cursoRepository;
     }
 
+    @Transactional
     public LeadCandidatoResponseDTO criar(LeadCandidatoRequestDTO dto) {
-        validarCursoExistente(dto.cursoInteresseId());
+        Curso curso = buscarCursoPorId(dto.cursoInteresseId());
 
         LeadCandidato lead = new LeadCandidato(
-                null,
                 dto.nome(),
                 dto.email(),
                 dto.telefone(),
                 dto.origem(),
-                dto.cursoInteresseId()
+                curso
         );
+
         LeadCandidato salvo = leadRepository.salvar(lead);
         return LeadCandidatoResponseDTO.fromDomain(salvo);
     }
 
+    @Transactional(readOnly = true)
     public LeadCandidatoResponseDTO buscarPorId(Long id) {
-        LeadCandidato lead = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado com o ID: " + id));
-        return LeadCandidatoResponseDTO.fromDomain(lead);
+        return LeadCandidatoResponseDTO.fromDomain(buscarEntidadePorId(id));
     }
 
+    @Transactional(readOnly = true)
     public List<LeadCandidatoResponseDTO> listarTodos() {
         return leadRepository.listarTodos()
                 .stream()
@@ -49,30 +56,46 @@ public class LeadCandidatoUseCase {
                 .toList();
     }
 
+    @Transactional
     public LeadCandidatoResponseDTO atualizar(Long id, LeadCandidatoRequestDTO dto) {
-        buscarPorId(id);
-        validarCursoExistente(dto.cursoInteresseId());
+        LeadCandidato lead = buscarEntidadePorId(id);
+        Curso curso = buscarCursoPorId(dto.cursoInteresseId());
 
-        LeadCandidato leadAtualizado = new LeadCandidato(
-                id,
+        lead.atualizarDados(
                 dto.nome(),
                 dto.email(),
                 dto.telefone(),
                 dto.origem(),
-                dto.cursoInteresseId()
+                curso
         );
-        LeadCandidato salvo = leadRepository.salvar(leadAtualizado);
+
+        LeadCandidato salvo = leadRepository.salvar(lead);
         return LeadCandidatoResponseDTO.fromDomain(salvo);
     }
 
+    @Transactional
     public void deletar(Long id) {
-        buscarPorId(id);
-        leadRepository.remover(id);
+        LeadCandidato lead = buscarEntidadePorId(id);
+        leadRepository.remover(lead.getId());
     }
 
-    private void validarCursoExistente(Long cursoId) {
-        if (cursoId != null && cursoRepository.buscarPorId(cursoId).isEmpty()) {
-            throw new ResourceNotFoundException("Curso de interesse não encontrado com o ID: " + cursoId);
+    private LeadCandidato buscarEntidadePorId(Long id) {
+        return leadRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Lead não encontrado com o ID: " + id
+                ));
+    }
+
+    private Curso buscarCursoPorId(Long cursoId) {
+        if (cursoId == null) {
+            throw new RegraDeNegocioException(
+                    "O curso de interesse é obrigatório."
+            );
         }
+
+        return cursoRepository.buscarPorId(cursoId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Curso de interesse não encontrado com o ID: " + cursoId
+                ));
     }
 }

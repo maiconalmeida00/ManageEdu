@@ -17,8 +17,8 @@ public record OportunidadeMatriculaResponseDTO(
         if (oportunidade == null) return null;
         return new OportunidadeMatriculaResponseDTO(
             oportunidade.getId(),
-            oportunidade.getLeadId(),
-            oportunidade.getCursoId(),
+            oportunidade.getLeadCandidato() != null ? oportunidade.getLeadCandidato().getId() : null,
+            oportunidade.getCurso() != null ? oportunidade.getCurso().getId() : null,
             oportunidade.getStatus(),
             oportunidade.getDataCriacao(),
             oportunidade.getObservacao()

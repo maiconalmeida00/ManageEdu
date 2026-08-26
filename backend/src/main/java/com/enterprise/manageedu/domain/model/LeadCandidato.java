@@ -1,21 +1,60 @@
 package com.enterprise.manageedu.domain.model;
 
-public class LeadCandidato {
-    private Long id;
-    private String nome;
-    private String email;
-    private String telefone;
-    private String origem;
-    private Long cursoInteresseId;
+import jakarta.persistence.*;
 
-    public LeadCandidato(Long id, String nome, String email, String telefone,
-                         String origem, Long cursoInteresseId) {
-        this.id = id;
+@Entity
+@Table(name = "lead_candidato")
+public class LeadCandidato {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "nome", nullable = false, length = 120)
+    private String nome;
+
+    @Column(name = "email", nullable = false, length = 150)
+    private String email;
+
+    @Column(name = "telefone", nullable = false, length = 20)
+    private String telefone;
+
+    @Column(name = "origem", nullable = false, length = 50)
+    private String origem;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "curso_interesse_id", nullable = false)
+    private Curso cursoInteresse;
+
+    protected LeadCandidato() {
+    }
+
+    public LeadCandidato(
+            String nome,
+            String email,
+            String telefone,
+            String origem,
+            Curso cursoInteresse
+    ) {
         this.nome = nome;
         this.email = email;
         this.telefone = telefone;
         this.origem = origem;
-        this.cursoInteresseId = cursoInteresseId;
+        this.cursoInteresse = cursoInteresse;
+    }
+
+    public void atualizarDados(
+            String nome,
+            String email,
+            String telefone,
+            String origem,
+            Curso cursoInteresse
+    ) {
+        this.nome = nome;
+        this.email = email;
+        this.telefone = telefone;
+        this.origem = origem;
+        this.cursoInteresse = cursoInteresse;
     }
 
     public Long getId() {
@@ -38,7 +77,12 @@ public class LeadCandidato {
         return origem;
     }
 
+    public Curso getCursoInteresse() {
+        return cursoInteresse;
+    }
+
     public Long getCursoInteresseId() {
-        return cursoInteresseId;
+        return cursoInteresse != null ? cursoInteresse.getId() : null;
     }
 }
+

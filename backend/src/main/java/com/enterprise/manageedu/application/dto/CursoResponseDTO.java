@@ -13,8 +13,8 @@ public record CursoResponseDTO(
         return new CursoResponseDTO(
             curso.getId(),
             curso.getNome(),
-            curso.getModalidade(),
-            curso.getTurno()
+            curso.getModalidade() != null ? curso.getModalidade().name() : null,
+            curso.getTurno() != null ? curso.getTurno().name() : null
         );
     }
 }
