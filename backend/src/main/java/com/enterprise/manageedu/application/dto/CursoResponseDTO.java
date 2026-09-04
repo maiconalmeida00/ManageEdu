@@ -1,20 +1,12 @@
 package com.enterprise.manageedu.application.dto;
 
-import com.enterprise.manageedu.domain.model.Curso;
+import com.enterprise.manageedu.domain.model.ModalidadeCurso;
+import com.enterprise.manageedu.domain.model.TurnoCurso;
 
 public record CursoResponseDTO(
-    Long id,
-    String nome,
-    String modalidade,
-    String turno
+        Long id,
+        String nome,
+        ModalidadeCurso modalidade,
+        TurnoCurso turno
 ) {
-    public static CursoResponseDTO fromDomain(Curso curso) {
-        if (curso == null) return null;
-        return new CursoResponseDTO(
-            curso.getId(),
-            curso.getNome(),
-            curso.getModalidade() != null ? curso.getModalidade().name() : null,
-            curso.getTurno() != null ? curso.getTurno().name() : null
-        );
-    }
 }

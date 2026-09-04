@@ -5,16 +5,11 @@ import com.enterprise.manageedu.application.dto.CursoResponseDTO;
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.Curso;
-import com.enterprise.manageedu.domain.model.ModalidadeCurso;
-import com.enterprise.manageedu.domain.model.TurnoCurso;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Locale;
+import java.util.stream.Collectors;
 
-@Service
 public class CursoUseCase {
 
     private final CursoRepository cursoRepository;
@@ -23,108 +18,62 @@ public class CursoUseCase {
         this.cursoRepository = cursoRepository;
     }
 
-    @Transactional
-    public CursoResponseDTO criar(CursoRequestDTO dto) {
-        ModalidadeCurso modalidade = converterModalidade(dto.modalidade());
-        TurnoCurso turno = converterTurno(dto.turno());
+    public CursoResponseDTO cadastrar(CursoRequestDTO request) {
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisicao de curso nao pode ser nula.");
+        }
 
-        Curso curso = new Curso(
-                dto.nome(),
-                modalidade,
-                turno
-        );
-
+        Curso curso = new Curso(request.nome(), request.modalidade(), request.turno());
         Curso salvo = cursoRepository.salvar(curso);
-
-        return CursoResponseDTO.fromDomain(salvo);
+        return toResponse(salvo);
     }
 
-    @Transactional(readOnly = true)
     public CursoResponseDTO buscarPorId(Long id) {
-        Curso curso = buscarEntidadePorId(id);
-
-        return CursoResponseDTO.fromDomain(curso);
+        validarId(id);
+        Curso curso = cursoRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
+        return toResponse(curso);
     }
 
-    @Transactional(readOnly = true)
     public List<CursoResponseDTO> listarTodos() {
-        return cursoRepository.listarTodos()
-                .stream()
-                .map(CursoResponseDTO::fromDomain)
-                .toList();
+        return cursoRepository.listarTodos().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional
-    public CursoResponseDTO atualizar(
-            Long id,
-            CursoRequestDTO dto
-    ) {
-        Curso curso = buscarEntidadePorId(id);
+    public CursoResponseDTO atualizar(Long id, CursoRequestDTO request) {
+        validarId(id);
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisicao de curso nao pode ser nula.");
+        }
 
-        ModalidadeCurso modalidade = converterModalidade(dto.modalidade());
-        TurnoCurso turno = converterTurno(dto.turno());
+        Curso existente = cursoRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
 
-        curso.atualizarDados(
-                dto.nome(),
-                modalidade,
-                turno
+        existente.atualizarDados(request.nome(), request.modalidade(), request.turno());
+        Curso salvo = cursoRepository.salvar(existente);
+        return toResponse(salvo);
+    }
+
+    public void remover(Long id) {
+        validarId(id);
+        cursoRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
+        cursoRepository.remover(id);
+    }
+
+    private void validarId(Long id) {
+        if (id == null || id <= 0) {
+            throw new RegraDeNegocioException("ID do curso deve ser maior que zero.");
+        }
+    }
+
+    private CursoResponseDTO toResponse(Curso curso) {
+        return new CursoResponseDTO(
+                curso.getId(),
+                curso.getNome(),
+                curso.getModalidade(),
+                curso.getTurno()
         );
-
-        Curso salvo = cursoRepository.salvar(curso);
-
-        return CursoResponseDTO.fromDomain(salvo);
-    }
-
-    @Transactional
-    public void deletar(Long id) {
-        Curso curso = buscarEntidadePorId(id);
-
-        cursoRepository.remover(curso.getId());
-    }
-
-    private Curso buscarEntidadePorId(Long id) {
-        return cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Curso não encontrado com o ID: " + id
-                ));
-    }
-
-    private ModalidadeCurso converterModalidade(String modalidade) {
-        if (modalidade == null || modalidade.isBlank()) {
-            throw new RegraDeNegocioException(
-                    "A modalidade do curso é obrigatória."
-            );
-        }
-
-        try {
-            return ModalidadeCurso.valueOf(
-                    modalidade.trim().toUpperCase(Locale.ROOT)
-            );
-        } catch (IllegalArgumentException exception) {
-            throw new RegraDeNegocioException(
-                    "Modalidade inválida: " + modalidade
-                            + ". Valores permitidos: PRESENCIAL, EAD, HIBRIDO."
-            );
-        }
-    }
-
-    private TurnoCurso converterTurno(String turno) {
-        if (turno == null || turno.isBlank()) {
-            throw new RegraDeNegocioException(
-                    "O turno do curso é obrigatório."
-            );
-        }
-
-        try {
-            return TurnoCurso.valueOf(
-                    turno.trim().toUpperCase(Locale.ROOT)
-            );
-        } catch (IllegalArgumentException exception) {
-            throw new RegraDeNegocioException(
-                    "Turno inválido: " + turno
-                            + ". Valores permitidos: MATUTINO, VESPERTINO, "
-                            + "NOTURNO, INTEGRAL."
-            );
-        }
     }
 }

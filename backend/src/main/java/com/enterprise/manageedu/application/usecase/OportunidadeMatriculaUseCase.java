@@ -8,15 +8,16 @@ import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.Curso;
 import com.enterprise.manageedu.domain.model.LeadCandidato;
 import com.enterprise.manageedu.domain.model.OportunidadeMatricula;
+import com.enterprise.manageedu.domain.model.StatusOportunidade;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-@Service
 public class OportunidadeMatriculaUseCase {
 
     private final OportunidadeRepository oportunidadeRepository;
@@ -33,111 +34,124 @@ public class OportunidadeMatriculaUseCase {
         this.cursoRepository = cursoRepository;
     }
 
-    @Transactional
-    public OportunidadeMatriculaResponseDTO criar(
-            OportunidadeMatriculaRequestDTO dto
-    ) {
-        LeadCandidato lead = buscarLeadPorId(dto.leadId());
-        Curso curso = buscarCursoPorId(dto.cursoId());
+    public OportunidadeMatriculaResponseDTO criar(OportunidadeMatriculaRequestDTO request) {
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisicao de oportunidade nao pode ser nula.");
+        }
 
-        OportunidadeMatricula oportunidade = new OportunidadeMatricula(
-                lead,
-                curso,
-                dto.observacao()
-        );
+        LeadCandidato lead = buscarLead(request.leadCandidatoId());
+        Curso curso = buscarCurso(request.cursoId());
 
+        OportunidadeMatricula oportunidade = new OportunidadeMatricula(lead, curso, request.observacao());
         OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
-
-        return OportunidadeMatriculaResponseDTO.fromDomain(salva);
+        return toResponse(salva);
     }
 
-    @Transactional(readOnly = true)
     public OportunidadeMatriculaResponseDTO buscarPorId(Long id) {
-        OportunidadeMatricula oportunidade = buscarEntidadePorId(id);
-
-        return OportunidadeMatriculaResponseDTO.fromDomain(oportunidade);
+        validarId(id);
+        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+        return toResponse(oportunidade);
     }
 
-    @Transactional(readOnly = true)
     public List<OportunidadeMatriculaResponseDTO> listarTodos() {
-        return oportunidadeRepository.listarTodos()
-                .stream()
-                .map(OportunidadeMatriculaResponseDTO::fromDomain)
-                .toList();
+        return oportunidadeRepository.listarTodos().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional
-    public OportunidadeMatriculaResponseDTO atualizar(
-            Long id,
-            OportunidadeMatriculaRequestDTO dto
-    ) {
-        OportunidadeMatricula oportunidade = buscarEntidadePorId(id);
-
-        LeadCandidato lead = buscarLeadPorId(dto.leadId());
-        Curso curso = buscarCursoPorId(dto.cursoId());
-
-        oportunidade.atualizarDados(
-                lead,
-                curso,
-                dto.observacao()
-        );
-
-        OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
-
-        return OportunidadeMatriculaResponseDTO.fromDomain(salva);
+    public List<OportunidadeMatriculaResponseDTO> listarPorStatus(StatusOportunidade status) {
+        if (status == null) {
+            throw new RegraDeNegocioException("Status da oportunidade nao pode ser nulo.");
+        }
+        return oportunidadeRepository.listarPorStatus(status).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
-    @Transactional
-    public OportunidadeMatriculaResponseDTO atualizarStatus(
-            Long id,
-            AtualizarStatusOportunidadeDTO dto
-    ) {
-        OportunidadeMatricula oportunidade = buscarEntidadePorId(id);
+    public Map<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> listarFunilPorStatus() {
+        Map<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> funil = new LinkedHashMap<>();
+        for (StatusOportunidade status : StatusOportunidade.values()) {
+            funil.put(status, listarPorStatus(status));
+        }
+        return funil;
+    }
 
-        oportunidade.alterarStatus(dto.status());
-
-        if (dto.observacao() != null && !dto.observacao().isBlank()) {
-            oportunidade.atualizarObservacao(dto.observacao());
+    public OportunidadeMatriculaResponseDTO atualizarDados(Long id, OportunidadeMatriculaRequestDTO request) {
+        validarId(id);
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisicao de oportunidade nao pode ser nula.");
         }
 
-        OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
+        OportunidadeMatricula existente = oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
 
-        return OportunidadeMatriculaResponseDTO.fromDomain(salva);
+        LeadCandidato lead = buscarLead(request.leadCandidatoId());
+        Curso curso = buscarCurso(request.cursoId());
+
+        existente.atualizarDados(lead, curso, request.observacao());
+        OportunidadeMatricula salva = oportunidadeRepository.salvar(existente);
+        return toResponse(salva);
     }
 
-    @Transactional
-    public void deletar(Long id) {
-        OportunidadeMatricula oportunidade = buscarEntidadePorId(id);
-
-        oportunidadeRepository.remover(oportunidade.getId());
-    }
-
-    private OportunidadeMatricula buscarEntidadePorId(Long id) {
-        return oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Oportunidade de matrícula não encontrada com o ID: " + id
-                ));
-    }
-
-    private LeadCandidato buscarLeadPorId(Long leadId) {
-        if (leadId == null) {
-            throw new RegraDeNegocioException("O lead candidato é obrigatório.");
+    public OportunidadeMatriculaResponseDTO alterarStatus(Long id, AtualizarStatusOportunidadeDTO request) {
+        validarId(id);
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisicao de atualizacao de status nao pode ser nula.");
+        }
+        if (request.novoStatus() == null) {
+            throw new RegraDeNegocioException("O novo status e obrigatorio.");
         }
 
+        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+
+        oportunidade.alterarStatus(request.novoStatus());
+        OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
+        return toResponse(salva);
+    }
+
+    public void remover(Long id) {
+        validarId(id);
+        oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+        oportunidadeRepository.remover(id);
+    }
+
+    private LeadCandidato buscarLead(Long leadId) {
+        if (leadId == null || leadId <= 0) {
+            throw new RegraDeNegocioException("O lead da oportunidade e obrigatorio.");
+        }
         return leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Lead não encontrado com o ID: " + leadId
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead nao encontrado para o ID: " + leadId));
     }
 
-    private Curso buscarCursoPorId(Long cursoId) {
-        if (cursoId == null) {
-            throw new RegraDeNegocioException("O curso é obrigatório.");
+    private Curso buscarCurso(Long cursoId) {
+        if (cursoId == null || cursoId <= 0) {
+            throw new RegraDeNegocioException("O curso da oportunidade e obrigatorio.");
         }
-
         return cursoRepository.buscarPorId(cursoId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Curso não encontrado com o ID: " + cursoId
-                ));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + cursoId));
+    }
+
+    private void validarId(Long id) {
+        if (id == null || id <= 0) {
+            throw new RegraDeNegocioException("ID da oportunidade deve ser maior que zero.");
+        }
+    }
+
+    private OportunidadeMatriculaResponseDTO toResponse(OportunidadeMatricula oportunidade) {
+        LeadCandidato lead = oportunidade.getLeadCandidato();
+        Curso curso = oportunidade.getCurso();
+        return new OportunidadeMatriculaResponseDTO(
+                oportunidade.getId(),
+                lead != null ? lead.getId() : null,
+                lead != null ? lead.getNome() : null,
+                curso != null ? curso.getId() : null,
+                curso != null ? curso.getNome() : null,
+                oportunidade.getStatus(),
+                oportunidade.getDataCriacao(),
+                oportunidade.getObservacao()
+        );
     }
 }
