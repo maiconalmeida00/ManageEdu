@@ -5,6 +5,8 @@ import com.enterprise.manageedu.application.dto.CursoResponseDTO;
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.Curso;
+import com.enterprise.manageedu.domain.model.ModalidadeCurso;
+import com.enterprise.manageedu.domain.model.TurnoCurso;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 
 import java.util.List;
@@ -23,7 +25,11 @@ public class CursoUseCase {
             throw new RegraDeNegocioException("Requisicao de curso nao pode ser nula.");
         }
 
-        Curso curso = new Curso(request.nome(), request.modalidade(), request.turno());
+        Curso curso = new Curso(
+            request.nome(),
+            converterModalidade(request.modalidade()),
+            converterTurno(request.turno())
+        );
         Curso salvo = cursoRepository.salvar(curso);
         return toResponse(salvo);
     }
@@ -50,7 +56,11 @@ public class CursoUseCase {
         Curso existente = cursoRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
 
-        existente.atualizarDados(request.nome(), request.modalidade(), request.turno());
+        existente.atualizarDados(
+            request.nome(),
+            converterModalidade(request.modalidade()),
+            converterTurno(request.turno())
+        );
         Curso salvo = cursoRepository.salvar(existente);
         return toResponse(salvo);
     }
@@ -65,6 +75,28 @@ public class CursoUseCase {
     private void validarId(Long id) {
         if (id == null || id <= 0) {
             throw new RegraDeNegocioException("ID do curso deve ser maior que zero.");
+        }
+    }
+
+    private ModalidadeCurso converterModalidade(String modalidade) {
+        if (modalidade == null || modalidade.isBlank()) {
+            throw new RegraDeNegocioException("A modalidade do curso e obrigatoria.");
+        }
+        try {
+            return ModalidadeCurso.valueOf(modalidade.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RegraDeNegocioException("Modalidade de curso invalida.");
+        }
+    }
+
+    private TurnoCurso converterTurno(String turno) {
+        if (turno == null || turno.isBlank()) {
+            throw new RegraDeNegocioException("O turno do curso e obrigatorio.");
+        }
+        try {
+            return TurnoCurso.valueOf(turno.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new RegraDeNegocioException("Turno de curso inválido.");
         }
     }
 

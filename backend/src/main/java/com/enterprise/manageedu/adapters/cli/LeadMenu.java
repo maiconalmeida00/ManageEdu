@@ -30,7 +30,7 @@ public class LeadMenu {
             System.out.println("4. Atualizar lead");
             System.out.println("5. Excluir lead");
             System.out.println("0. Voltar");
-            System.out.print("Escolha uma opcao: ");
+            System.out.print("Escolha uma opção: ");
 
             String opcao = sc.nextLine().trim();
             switch (opcao) {
@@ -40,7 +40,7 @@ public class LeadMenu {
                 case "4" -> atualizar();
                 case "5" -> excluir();
                 case "0" -> voltar = true;
-                default -> System.out.println("Opcao invalida. Tente novamente.");
+                default -> System.out.println("Opção inválida. Tente novamente.");
             }
         }
     }
@@ -110,7 +110,7 @@ public class LeadMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID invalido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um numero.");
         }
     }
 

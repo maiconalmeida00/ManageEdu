@@ -7,25 +7,33 @@ import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.StatusOportunidade;
+import com.enterprise.manageedu.domain.model.Usuario;
 
 import java.util.List;
 import java.util.Scanner;
+import java.util.function.Supplier;
 
 public class OportunidadeMenu {
 
     private final Scanner sc;
     private final OportunidadeMatriculaUseCase oportunidadeUseCase;
+    private final Supplier<Usuario> usuarioAtivo;
 
-    public OportunidadeMenu(Scanner sc, OportunidadeMatriculaUseCase oportunidadeUseCase) {
+    public OportunidadeMenu(
+            Scanner sc,
+            OportunidadeMatriculaUseCase oportunidadeUseCase,
+            Supplier<Usuario> usuarioAtivo
+    ) {
         this.sc = sc;
         this.oportunidadeUseCase = oportunidadeUseCase;
+        this.usuarioAtivo = usuarioAtivo;
     }
 
     public void exibir() {
         boolean voltar = false;
         while (!voltar) {
             System.out.println();
-            System.out.println("--- Gerenciar oportunidades de matricula ---");
+            System.out.println("--- Gerenciar oportunidades de matrícula ---");
             System.out.println("1. Criar oportunidade");
             System.out.println("2. Listar oportunidades");
             System.out.println("3. Buscar oportunidade por ID");
@@ -33,7 +41,7 @@ public class OportunidadeMenu {
             System.out.println("5. Alterar status da oportunidade");
             System.out.println("6. Excluir oportunidade");
             System.out.println("0. Voltar");
-            System.out.print("Escolha uma opcao: ");
+            System.out.print("Escolha uma opção: ");
 
             String opcao = sc.nextLine().trim();
             switch (opcao) {
@@ -44,7 +52,7 @@ public class OportunidadeMenu {
                 case "5" -> alterarStatus();
                 case "6" -> excluir();
                 case "0" -> voltar = true;
-                default -> System.out.println("Opcao invalida. Tente novamente.");
+                default -> System.out.println("Opção invalida. Tente novamente.");
             }
         }
     }
@@ -93,7 +101,8 @@ public class OportunidadeMenu {
             StatusOportunidade novoStatus = lerStatus();
             OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.alterarStatus(
                     id,
-                    new AtualizarStatusOportunidadeDTO(novoStatus)
+                    new AtualizarStatusOportunidadeDTO(novoStatus),
+                    usuarioAtivo.get()
             );
             System.out.println("Status da oportunidade alterado com sucesso.");
             imprimirOportunidade(atualizada);
@@ -123,7 +132,7 @@ public class OportunidadeMenu {
         try {
             return StatusOportunidade.valueOf(valor);
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Status invalido.");
+            throw new IllegalArgumentException("Status inválido.");
         }
     }
 
@@ -133,7 +142,7 @@ public class OportunidadeMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID invalido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um numero.");
         }
     }
 
@@ -143,8 +152,8 @@ public class OportunidadeMenu {
                         + " | Candidato: " + oportunidade.leadNome()
                         + " | Curso: " + oportunidade.cursoNome()
                         + " | Status: " + oportunidade.status()
-                        + " | Criacao: " + oportunidade.dataCriacao()
-                        + " | Observacao: " + (oportunidade.observacao() == null ? "-" : oportunidade.observacao())
+                        + " | Criação: " + oportunidade.dataCriacao()
+                        + " | Observação: " + (oportunidade.observacao() == null ? "-" : oportunidade.observacao())
         );
     }
 

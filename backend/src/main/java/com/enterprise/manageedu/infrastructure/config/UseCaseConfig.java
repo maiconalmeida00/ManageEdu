@@ -6,11 +6,31 @@ import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
+import com.enterprise.manageedu.domain.model.Administrador;
+import com.enterprise.manageedu.domain.model.OperadorCaptacao;
+import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryCursoRepository;
+import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryLeadRepository;
+import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryOportunidadeRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class UseCaseConfig {
+
+    @Bean
+    public CursoRepository cursoRepository() {
+        return new InMemoryCursoRepository();
+    }
+
+    @Bean
+    public LeadRepository leadRepository() {
+        return new InMemoryLeadRepository();
+    }
+
+    @Bean
+    public OportunidadeRepository oportunidadeRepository() {
+        return new InMemoryOportunidadeRepository();
+    }
 
     @Bean
     public CursoUseCase cursoUseCase(CursoRepository cursoRepository) {
@@ -32,5 +52,15 @@ public class UseCaseConfig {
             CursoRepository cursoRepository
     ) {
         return new OportunidadeMatriculaUseCase(oportunidadeRepository, leadRepository, cursoRepository);
+    }
+
+    @Bean
+    public Administrador administradorPadrao() {
+        return new Administrador(1L, "Ana Administradora");
+    }
+
+    @Bean
+    public OperadorCaptacao operadorPadrao() {
+        return new OperadorCaptacao(2L, "Carlos Captacao");
     }
 }

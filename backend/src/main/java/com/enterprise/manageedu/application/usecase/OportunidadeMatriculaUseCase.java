@@ -9,6 +9,7 @@ import com.enterprise.manageedu.domain.model.Curso;
 import com.enterprise.manageedu.domain.model.LeadCandidato;
 import com.enterprise.manageedu.domain.model.OportunidadeMatricula;
 import com.enterprise.manageedu.domain.model.StatusOportunidade;
+import com.enterprise.manageedu.domain.model.Usuario;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
@@ -94,7 +95,11 @@ public class OportunidadeMatriculaUseCase {
         return toResponse(salva);
     }
 
-    public OportunidadeMatriculaResponseDTO alterarStatus(Long id, AtualizarStatusOportunidadeDTO request) {
+        public OportunidadeMatriculaResponseDTO alterarStatus(
+            Long id,
+            AtualizarStatusOportunidadeDTO request,
+            Usuario usuario
+        ) {
         validarId(id);
         if (request == null) {
             throw new RegraDeNegocioException("Requisicao de atualizacao de status nao pode ser nula.");
@@ -102,9 +107,16 @@ public class OportunidadeMatriculaUseCase {
         if (request.novoStatus() == null) {
             throw new RegraDeNegocioException("O novo status e obrigatorio.");
         }
+        if (usuario == null) {
+            throw new RegraDeNegocioException("Usuario responsavel pela alteracao e obrigatorio.");
+        }
 
         OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+
+        if (!usuario.podeAlterarStatus(oportunidade.getStatus(), request.novoStatus())) {
+            throw new RegraDeNegocioException("Usuario sem permissao para alterar este status.");
+        }
 
         oportunidade.alterarStatus(request.novoStatus());
         OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);

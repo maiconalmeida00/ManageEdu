@@ -7,6 +7,9 @@ import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.StatusOportunidade;
+import com.enterprise.manageedu.domain.model.Administrador;
+import com.enterprise.manageedu.domain.model.OperadorCaptacao;
+import com.enterprise.manageedu.domain.model.Usuario;
 
 import java.util.List;
 import java.util.Map;
@@ -19,18 +22,26 @@ public class MenuPrincipal {
     private final LeadMenu leadMenu;
     private final OportunidadeMenu oportunidadeMenu;
     private final OportunidadeMatriculaUseCase oportunidadeUseCase;
+    private final Administrador administradorPadrao;
+    private final OperadorCaptacao operadorPadrao;
+    private Usuario usuarioAtivo;
 
     public MenuPrincipal(
             Scanner sc,
             CursoUseCase cursoUseCase,
             LeadCandidatoUseCase leadUseCase,
-            OportunidadeMatriculaUseCase oportunidadeUseCase
+            OportunidadeMatriculaUseCase oportunidadeUseCase,
+            Administrador administradorPadrao,
+            OperadorCaptacao operadorPadrao
     ) {
         this.sc = sc;
         this.oportunidadeUseCase = oportunidadeUseCase;
+        this.administradorPadrao = administradorPadrao;
+        this.operadorPadrao = operadorPadrao;
+        this.usuarioAtivo = administradorPadrao;
         this.cursoMenu = new CursoMenu(sc, cursoUseCase);
         this.leadMenu = new LeadMenu(sc, leadUseCase);
-        this.oportunidadeMenu = new OportunidadeMenu(sc, oportunidadeUseCase);
+        this.oportunidadeMenu = new OportunidadeMenu(sc, oportunidadeUseCase, () -> usuarioAtivo);
     }
 
     public void iniciar() {
@@ -43,11 +54,12 @@ public class MenuPrincipal {
                 case "2" -> leadMenu.exibir();
                 case "3" -> oportunidadeMenu.exibir();
                 case "4" -> exibirFunil();
+                case "5" -> alternarUsuario();
                 case "0" -> {
                     System.out.println("Encerrando o ManageEdu. Ate logo!");
                     executar = false;
                 }
-                default -> System.out.println("Opcao invalida. Tente novamente.");
+                default -> System.out.println("Opção inválida. Tente novamente.");
             }
         }
     }
@@ -59,8 +71,9 @@ public class MenuPrincipal {
         System.out.println("2. Gerenciar leads/candidatos");
         System.out.println("3. Gerenciar oportunidades de matricula");
         System.out.println("4. Exibir funil de matricula por status");
+        System.out.println("5. Alternar usuario ativo (atual: " + usuarioAtivo.getNome() + ")");
         System.out.println("0. Sair");
-        System.out.print("Escolha uma opcao: ");
+        System.out.print("Escolha uma opção: ");
     }
 
     private void exibirFunil() {
@@ -85,5 +98,10 @@ public class MenuPrincipal {
         } catch (ResourceNotFoundException | RegraDeNegocioException | IllegalArgumentException e) {
             System.out.println("Erro: " + e.getMessage());
         }
+    }
+
+    private void alternarUsuario() {
+        usuarioAtivo = usuarioAtivo == administradorPadrao ? operadorPadrao : administradorPadrao;
+        System.out.println("Usuario ativo: " + usuarioAtivo.getNome());
     }
 }

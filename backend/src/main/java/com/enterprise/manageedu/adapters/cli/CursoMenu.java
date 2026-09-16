@@ -32,7 +32,7 @@ public class CursoMenu {
             System.out.println("4. Atualizar curso");
             System.out.println("5. Excluir curso");
             System.out.println("0. Voltar");
-            System.out.print("Escolha uma opcao: ");
+            System.out.print("Escolha uma opção: ");
 
             String opcao = sc.nextLine().trim();
             switch (opcao) {
@@ -42,7 +42,7 @@ public class CursoMenu {
                 case "4" -> atualizar();
                 case "5" -> excluir();
                 case "0" -> voltar = true;
-                default -> System.out.println("Opcao invalida. Tente novamente.");
+                default -> System.out.println("Opção inválida. Tente novamente.");
             }
         }
     }
@@ -96,30 +96,32 @@ public class CursoMenu {
     private CursoRequestDTO lerCurso() {
         System.out.print("Nome: ");
         String nome = sc.nextLine();
-        ModalidadeCurso modalidade = lerModalidade();
-        TurnoCurso turno = lerTurno();
+        String modalidade = lerModalidade();
+        String turno = lerTurno();
         return new CursoRequestDTO(nome, modalidade, turno);
     }
 
-    private ModalidadeCurso lerModalidade() {
+    private String lerModalidade() {
         System.out.println("Modalidades: PRESENCIAL, EAD, HIBRIDO");
         System.out.print("Modalidade: ");
         String valor = sc.nextLine().trim().toUpperCase();
         try {
-            return ModalidadeCurso.valueOf(valor);
+            ModalidadeCurso.valueOf(valor);
+            return valor;
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Modalidade invalida.");
         }
     }
 
-    private TurnoCurso lerTurno() {
+    private String lerTurno() {
         System.out.println("Turnos: MATUTINO, VESPERTINO, NOTURNO, INTEGRAL");
         System.out.print("Turno: ");
         String valor = sc.nextLine().trim().toUpperCase();
         try {
-            return TurnoCurso.valueOf(valor);
+            TurnoCurso.valueOf(valor);
+            return valor;
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Turno invalido.");
+            throw new IllegalArgumentException("Turno inválido.");
         }
     }
 
@@ -129,7 +131,7 @@ public class CursoMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID invalido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um numero.");
         }
     }
 
