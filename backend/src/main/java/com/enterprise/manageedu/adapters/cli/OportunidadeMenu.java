@@ -126,7 +126,7 @@ public class OportunidadeMenu {
     }
 
     private StatusOportunidade lerStatus() {
-        System.out.println("Status: NOVO_LEAD, CONTATO, DOCUMENTACAO, MATRICULA_CONFIRMADA, DESISTENCIA");
+        System.out.println("Códigos de status: NOVO_LEAD, CONTATO, DOCUMENTACAO, MATRICULA_CONFIRMADA, DESISTENCIA");
         System.out.print("Novo status: ");
         String valor = sc.nextLine().trim().toUpperCase();
         try {
@@ -151,10 +151,20 @@ public class OportunidadeMenu {
                 "ID: " + oportunidade.id()
                         + " | Candidato: " + oportunidade.leadNome()
                         + " | Curso: " + oportunidade.cursoNome()
-                        + " | Status: " + oportunidade.status()
+                        + " | Status: " + formatarStatus(oportunidade.status())
                         + " | Criação: " + oportunidade.dataCriacao()
                         + " | Observação: " + (oportunidade.observacao() == null ? "-" : oportunidade.observacao())
         );
+    }
+
+    public static String formatarStatus(StatusOportunidade status) {
+        return switch (status) {
+            case NOVO_LEAD -> "NOVO LEAD";
+            case CONTATO -> "CONTATO";
+            case DOCUMENTACAO -> "DOCUMENTAÇÃO";
+            case MATRICULA_CONFIRMADA -> "MATRÍCULA CONFIRMADA";
+            case DESISTENCIA -> "DESISTÊNCIA";
+        };
     }
 
     private void executar(Runnable acao) {

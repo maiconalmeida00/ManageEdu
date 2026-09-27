@@ -102,7 +102,7 @@ public class CursoMenu {
     }
 
     private String lerModalidade() {
-        System.out.println("Modalidades: PRESENCIAL, EAD, HIBRIDO");
+        System.out.println("Modalidades: PRESENCIAL, EAD, HÍBRIDO");
         System.out.print("Modalidade: ");
         String valor = sc.nextLine().trim().toUpperCase();
         try {
@@ -139,9 +139,13 @@ public class CursoMenu {
         System.out.println(
                 "ID: " + curso.id()
                         + " | Nome: " + curso.nome()
-                        + " | Modalidade: " + curso.modalidade()
+                        + " | Modalidade: " + formatarModalidade(curso.modalidade())
                         + " | Turno: " + curso.turno()
         );
+    }
+
+    private String formatarModalidade(ModalidadeCurso modalidade) {
+        return modalidade == ModalidadeCurso.HIBRIDO ? "HÍBRIDO" : modalidade.toString();
     }
 
     private void executar(Runnable acao) {

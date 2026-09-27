@@ -86,7 +86,7 @@ public class MenuPrincipal {
             for (Map.Entry<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> entrada : funil.entrySet()) {
                 List<OportunidadeMatriculaResponseDTO> oportunidades = entrada.getValue();
                 System.out.println();
-                System.out.println(entrada.getKey() + " (" + oportunidades.size() + ")");
+                System.out.println(OportunidadeMenu.formatarStatus(entrada.getKey()) + " (" + oportunidades.size() + ")");
                 if (oportunidades.isEmpty()) {
                     System.out.println("  Nenhuma oportunidade neste status.");
                     continue;
