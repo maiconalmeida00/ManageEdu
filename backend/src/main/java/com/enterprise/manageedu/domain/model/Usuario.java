@@ -1,5 +1,7 @@
 package com.enterprise.manageedu.domain.model;
 
+import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
+
 public abstract class Usuario {
 
     private Long id;
@@ -7,7 +9,7 @@ public abstract class Usuario {
 
     protected Usuario(Long id, String nome) {
         if (id == null || id <= 0 || nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Usuário deve possuir ID e nome válidos.");
+            throw new RegraDeNegocioException("Usuário deve possuir ID e nome válidos.");
         }
         this.id = id;
         this.nome = nome.trim();

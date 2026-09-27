@@ -50,6 +50,12 @@ class ManageEduTdeTests {
                 () -> useCase.cadastrar(new CursoRequestDTO(" ", "EAD", "NOTURNO")));
     }
 
+        @Test
+        void deveBloquearUsuarioSemDadosValidos() {
+                assertThrows(RegraDeNegocioException.class,
+                                () -> new Administrador(null, "Administrador"));
+        }
+
     @Test
     void deveCriarLeadValido() {
         InMemoryCursoRepository cursoRepository = new InMemoryCursoRepository();
