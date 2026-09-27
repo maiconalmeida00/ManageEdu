@@ -33,14 +33,14 @@ public enum StatusOportunidade {
 
     public static void validarTransicao(StatusOportunidade atual, StatusOportunidade novo) {
         if (atual == null) {
-            throw new RegraDeNegocioException("O status atual da oportunidade nao pode ser nulo.");
+            throw new RegraDeNegocioException("O status atual da oportunidade não pode ser nulo.");
         }
         if (novo == null) {
-            throw new RegraDeNegocioException("O novo status da oportunidade nao pode ser nulo.");
+            throw new RegraDeNegocioException("O novo status da oportunidade não pode ser nulo.");
         }
         if (!transicaoPermitida(atual, novo)) {
             throw new RegraDeNegocioException(
-                    "Transicao de " + atual + " para " + novo + " nao permitida no funil."
+                    "Transição de " + atual + " para " + novo + " não permitida no funil."
             );
         }
     }

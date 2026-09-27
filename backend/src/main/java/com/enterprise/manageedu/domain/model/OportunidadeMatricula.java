@@ -19,10 +19,10 @@ public class OportunidadeMatricula {
             String observacao
     ) {
         if (leadCandidato == null) {
-            throw new RegraDeNegocioException("O lead candidato da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O lead candidato da oportunidade é obrigatório.");
         }
         if (curso == null) {
-            throw new RegraDeNegocioException("O curso da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
 
         this.leadCandidato = leadCandidato;
@@ -38,10 +38,10 @@ public class OportunidadeMatricula {
 
     public void atualizarDados(LeadCandidato leadCandidato, Curso curso, String observacao) {
         if (leadCandidato == null) {
-            throw new RegraDeNegocioException("O lead candidato da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O lead candidato da oportunidade é obrigatório.");
         }
         if (curso == null) {
-            throw new RegraDeNegocioException("O curso da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
 
         this.leadCandidato = leadCandidato;
@@ -64,7 +64,7 @@ public class OportunidadeMatricula {
         }
         String normalizada = observacao.trim();
         if (normalizada.length() > 500) {
-            throw new RegraDeNegocioException("A observacao da oportunidade deve ter no maximo 500 caracteres.");
+            throw new RegraDeNegocioException("A observação da oportunidade deve ter no máximo 500 caracteres.");
         }
         return normalizada;
     }

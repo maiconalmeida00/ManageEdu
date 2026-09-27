@@ -43,22 +43,22 @@ public class LeadCandidato {
             Curso cursoInteresse
     ) {
         if (nome == null || nome.isBlank()) {
-            throw new RegraDeNegocioException("O nome do lead e obrigatorio.");
+            throw new RegraDeNegocioException("O nome do lead é obrigatório.");
         }
         if (email == null || email.isBlank()) {
-            throw new RegraDeNegocioException("O email do lead e obrigatorio.");
+            throw new RegraDeNegocioException("O e-mail do lead é obrigatório.");
         }
         if (!email.contains("@") || !email.contains(".")) {
-            throw new RegraDeNegocioException("O email do lead deve ter um formato basico valido.");
+            throw new RegraDeNegocioException("O e-mail do lead deve ter um formato básico válido.");
         }
         if (telefone == null || telefone.isBlank()) {
-            throw new RegraDeNegocioException("O telefone do lead e obrigatorio.");
+            throw new RegraDeNegocioException("O telefone do lead é obrigatório.");
         }
         if (origem == null || origem.isBlank()) {
-            throw new RegraDeNegocioException("A origem do lead e obrigatoria.");
+            throw new RegraDeNegocioException("A origem do lead é obrigatória.");
         }
         if (cursoInteresse == null) {
-            throw new RegraDeNegocioException("O curso de interesse do lead e obrigatorio.");
+            throw new RegraDeNegocioException("O curso de interesse do lead é obrigatório.");
         }
 
         this.nome = nome.trim();

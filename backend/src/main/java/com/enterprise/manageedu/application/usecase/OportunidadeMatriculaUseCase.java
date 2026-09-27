@@ -37,7 +37,7 @@ public class OportunidadeMatriculaUseCase {
 
     public OportunidadeMatriculaResponseDTO criar(OportunidadeMatriculaRequestDTO request) {
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de oportunidade nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de oportunidade não pode ser nula.");
         }
 
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
@@ -51,7 +51,7 @@ public class OportunidadeMatriculaUseCase {
     public OportunidadeMatriculaResponseDTO buscarPorId(Long id) {
         validarId(id);
         OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
         return toResponse(oportunidade);
     }
 
@@ -63,7 +63,7 @@ public class OportunidadeMatriculaUseCase {
 
     public List<OportunidadeMatriculaResponseDTO> listarPorStatus(StatusOportunidade status) {
         if (status == null) {
-            throw new RegraDeNegocioException("Status da oportunidade nao pode ser nulo.");
+            throw new RegraDeNegocioException("Status da oportunidade não pode ser nulo.");
         }
         return oportunidadeRepository.listarPorStatus(status).stream()
                 .map(this::toResponse)
@@ -81,11 +81,11 @@ public class OportunidadeMatriculaUseCase {
     public OportunidadeMatriculaResponseDTO atualizarDados(Long id, OportunidadeMatriculaRequestDTO request) {
         validarId(id);
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de oportunidade nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de oportunidade não pode ser nula.");
         }
 
         OportunidadeMatricula existente = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
 
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
         Curso curso = buscarCurso(request.cursoId());
@@ -102,20 +102,20 @@ public class OportunidadeMatriculaUseCase {
         ) {
         validarId(id);
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de atualizacao de status nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de atualização de status não pode ser nula.");
         }
         if (request.novoStatus() == null) {
-            throw new RegraDeNegocioException("O novo status e obrigatorio.");
+            throw new RegraDeNegocioException("O novo status é obrigatório.");
         }
         if (usuario == null) {
-            throw new RegraDeNegocioException("Usuario responsavel pela alteracao e obrigatorio.");
+            throw new RegraDeNegocioException("Usuário responsável pela alteração é obrigatório.");
         }
 
         OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
 
         if (!usuario.podeAlterarStatus(oportunidade.getStatus(), request.novoStatus())) {
-            throw new RegraDeNegocioException("Usuario sem permissao para alterar este status.");
+            throw new RegraDeNegocioException("Usuário sem permissão para alterar este status.");
         }
 
         oportunidade.alterarStatus(request.novoStatus());
@@ -126,24 +126,24 @@ public class OportunidadeMatriculaUseCase {
     public void remover(Long id) {
         validarId(id);
         oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade nao encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
         oportunidadeRepository.remover(id);
     }
 
     private LeadCandidato buscarLead(Long leadId) {
         if (leadId == null || leadId <= 0) {
-            throw new RegraDeNegocioException("O lead da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O lead da oportunidade é obrigatório.");
         }
         return leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead nao encontrado para o ID: " + leadId));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + leadId));
     }
 
     private Curso buscarCurso(Long cursoId) {
         if (cursoId == null || cursoId <= 0) {
-            throw new RegraDeNegocioException("O curso da oportunidade e obrigatorio.");
+            throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
         return cursoRepository.buscarPorId(cursoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + cursoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + cursoId));
     }
 
     private void validarId(Long id) {

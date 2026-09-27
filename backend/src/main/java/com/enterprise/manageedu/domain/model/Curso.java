@@ -23,13 +23,13 @@ public class Curso {
 
     private void definirDados(String nome, ModalidadeCurso modalidade, TurnoCurso turno) {
         if (nome == null || nome.isBlank()) {
-            throw new RegraDeNegocioException("O nome do curso e obrigatorio.");
+            throw new RegraDeNegocioException("O nome do curso é obrigatório.");
         }
         if (modalidade == null) {
-            throw new RegraDeNegocioException("A modalidade do curso e obrigatoria.");
+            throw new RegraDeNegocioException("A modalidade do curso é obrigatória.");
         }
         if (turno == null) {
-            throw new RegraDeNegocioException("O turno do curso e obrigatorio.");
+            throw new RegraDeNegocioException("O turno do curso é obrigatório.");
         }
 
         this.nome = nome.trim();

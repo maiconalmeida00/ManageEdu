@@ -52,7 +52,7 @@ public class OportunidadeMenu {
                 case "5" -> alterarStatus();
                 case "6" -> excluir();
                 case "0" -> voltar = true;
-                default -> System.out.println("Opção invalida. Tente novamente.");
+                default -> System.out.println("Opção inválida. Tente novamente.");
             }
         }
     }
@@ -90,7 +90,7 @@ public class OportunidadeMenu {
             Long id = lerLong("ID da oportunidade: ");
             OportunidadeMatriculaRequestDTO request = lerOportunidade();
             OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.atualizarDados(id, request);
-            System.out.println("Dados da oportunidade atualizados com sucesso. O status nao foi alterado.");
+            System.out.println("Dados da oportunidade atualizados com sucesso. O status não foi alterado.");
             imprimirOportunidade(atualizada);
         });
     }
@@ -113,14 +113,14 @@ public class OportunidadeMenu {
         executar(() -> {
             Long id = lerLong("ID da oportunidade: ");
             oportunidadeUseCase.remover(id);
-            System.out.println("Oportunidade excluida com sucesso.");
+            System.out.println("Oportunidade excluída com sucesso.");
         });
     }
 
     private OportunidadeMatriculaRequestDTO lerOportunidade() {
         Long leadId = lerLong("ID do lead: ");
         Long cursoId = lerLong("ID do curso: ");
-        System.out.print("Observacao (opcional): ");
+        System.out.print("Observação (opcional): ");
         String observacao = sc.nextLine();
         return new OportunidadeMatriculaRequestDTO(leadId, cursoId, observacao);
     }
@@ -142,7 +142,7 @@ public class OportunidadeMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID inválido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um número.");
         }
     }
 

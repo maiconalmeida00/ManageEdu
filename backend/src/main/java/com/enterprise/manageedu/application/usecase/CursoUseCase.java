@@ -22,7 +22,7 @@ public class CursoUseCase {
 
     public CursoResponseDTO cadastrar(CursoRequestDTO request) {
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de curso nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de curso não pode ser nula.");
         }
 
         Curso curso = new Curso(
@@ -37,7 +37,7 @@ public class CursoUseCase {
     public CursoResponseDTO buscarPorId(Long id) {
         validarId(id);
         Curso curso = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
         return toResponse(curso);
     }
 
@@ -50,11 +50,11 @@ public class CursoUseCase {
     public CursoResponseDTO atualizar(Long id, CursoRequestDTO request) {
         validarId(id);
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de curso nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de curso não pode ser nula.");
         }
 
         Curso existente = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
 
         existente.atualizarDados(
             request.nome(),
@@ -68,7 +68,7 @@ public class CursoUseCase {
     public void remover(Long id) {
         validarId(id);
         cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
         cursoRepository.remover(id);
     }
 
@@ -80,18 +80,18 @@ public class CursoUseCase {
 
     private ModalidadeCurso converterModalidade(String modalidade) {
         if (modalidade == null || modalidade.isBlank()) {
-            throw new RegraDeNegocioException("A modalidade do curso e obrigatoria.");
+            throw new RegraDeNegocioException("A modalidade do curso é obrigatória.");
         }
         try {
             return ModalidadeCurso.valueOf(modalidade.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RegraDeNegocioException("Modalidade de curso invalida.");
+            throw new RegraDeNegocioException("Modalidade de curso inválida.");
         }
     }
 
     private TurnoCurso converterTurno(String turno) {
         if (turno == null || turno.isBlank()) {
-            throw new RegraDeNegocioException("O turno do curso e obrigatorio.");
+            throw new RegraDeNegocioException("O turno do curso é obrigatório.");
         }
         try {
             return TurnoCurso.valueOf(turno.trim().toUpperCase());

@@ -24,7 +24,7 @@ public class LeadCandidatoUseCase {
 
     public LeadCandidatoResponseDTO cadastrar(LeadCandidatoRequestDTO request) {
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de lead nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de lead não pode ser nula.");
         }
 
         Curso cursoInteresse = buscarCurso(request.cursoInteresseId());
@@ -43,7 +43,7 @@ public class LeadCandidatoUseCase {
     public LeadCandidatoResponseDTO buscarPorId(Long id) {
         validarId(id);
         LeadCandidato lead = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
         return toResponse(lead);
     }
 
@@ -56,11 +56,11 @@ public class LeadCandidatoUseCase {
     public LeadCandidatoResponseDTO atualizar(Long id, LeadCandidatoRequestDTO request) {
         validarId(id);
         if (request == null) {
-            throw new RegraDeNegocioException("Requisicao de lead nao pode ser nula.");
+            throw new RegraDeNegocioException("Requisição de lead não pode ser nula.");
         }
 
         LeadCandidato existente = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
 
         Curso cursoInteresse = buscarCurso(request.cursoInteresseId());
 
@@ -78,16 +78,16 @@ public class LeadCandidatoUseCase {
     public void remover(Long id) {
         validarId(id);
         leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead nao encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
         leadRepository.remover(id);
     }
 
     private Curso buscarCurso(Long cursoId) {
         if (cursoId == null || cursoId <= 0) {
-            throw new RegraDeNegocioException("O curso de interesse do lead e obrigatorio.");
+            throw new RegraDeNegocioException("O curso de interesse do lead é obrigatório.");
         }
         return cursoRepository.buscarPorId(cursoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso nao encontrado para o ID: " + cursoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + cursoId));
     }
 
     private void validarId(Long id) {

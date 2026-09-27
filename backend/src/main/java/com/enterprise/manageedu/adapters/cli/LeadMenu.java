@@ -87,7 +87,7 @@ public class LeadMenu {
         executar(() -> {
             Long id = lerLong("ID do lead: ");
             leadUseCase.remover(id);
-            System.out.println("Lead excluido com sucesso.");
+            System.out.println("Lead excluído com sucesso.");
         });
     }
 
@@ -110,7 +110,7 @@ public class LeadMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID inválido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um número.");
         }
     }
 

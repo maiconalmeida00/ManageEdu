@@ -56,7 +56,7 @@ public class MenuPrincipal {
                 case "4" -> exibirFunil();
                 case "5" -> alternarUsuario();
                 case "0" -> {
-                    System.out.println("Encerrando o ManageEdu. Ate logo!");
+                    System.out.println("Encerrando o ManageEdu. Até logo!");
                     executar = false;
                 }
                 default -> System.out.println("Opção inválida. Tente novamente.");
@@ -69,9 +69,9 @@ public class MenuPrincipal {
         System.out.println("===== ManageEdu - CRM Educacional =====");
         System.out.println("1. Gerenciar cursos");
         System.out.println("2. Gerenciar leads/candidatos");
-        System.out.println("3. Gerenciar oportunidades de matricula");
-        System.out.println("4. Exibir funil de matricula por status");
-        System.out.println("5. Alternar usuario ativo (atual: " + usuarioAtivo.getNome() + ")");
+        System.out.println("3. Gerenciar oportunidades de matrícula");
+        System.out.println("4. Exibir funil de matrícula por status");
+        System.out.println("5. Alternar usuário ativo (atual: " + usuarioAtivo.getNome() + ")");
         System.out.println("0. Sair");
         System.out.print("Escolha uma opção: ");
     }
@@ -82,7 +82,7 @@ public class MenuPrincipal {
                     oportunidadeUseCase.listarFunilPorStatus();
 
             System.out.println();
-            System.out.println("--- Funil de matricula por status ---");
+            System.out.println("--- Funil de matrícula por status ---");
             for (Map.Entry<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> entrada : funil.entrySet()) {
                 List<OportunidadeMatriculaResponseDTO> oportunidades = entrada.getValue();
                 System.out.println();
@@ -102,6 +102,6 @@ public class MenuPrincipal {
 
     private void alternarUsuario() {
         usuarioAtivo = usuarioAtivo == administradorPadrao ? operadorPadrao : administradorPadrao;
-        System.out.println("Usuario ativo: " + usuarioAtivo.getNome());
+        System.out.println("Usuário ativo: " + usuarioAtivo.getNome());
     }
 }

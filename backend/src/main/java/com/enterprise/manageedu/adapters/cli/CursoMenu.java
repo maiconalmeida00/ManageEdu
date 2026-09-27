@@ -89,7 +89,7 @@ public class CursoMenu {
         executar(() -> {
             Long id = lerLong("ID do curso: ");
             cursoUseCase.remover(id);
-            System.out.println("Curso excluido com sucesso.");
+            System.out.println("Curso excluído com sucesso.");
         });
     }
 
@@ -109,7 +109,7 @@ public class CursoMenu {
             ModalidadeCurso.valueOf(valor);
             return valor;
         } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException("Modalidade invalida.");
+            throw new IllegalArgumentException("Modalidade inválida.");
         }
     }
 
@@ -131,7 +131,7 @@ public class CursoMenu {
         try {
             return Long.parseLong(valor);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("ID inválido. Informe um numero.");
+            throw new IllegalArgumentException("ID inválido. Informe um número.");
         }
     }
 

@@ -7,7 +7,7 @@ public abstract class Usuario {
 
     protected Usuario(Long id, String nome) {
         if (id == null || id <= 0 || nome == null || nome.isBlank()) {
-            throw new IllegalArgumentException("Usuario deve possuir ID e nome validos.");
+            throw new IllegalArgumentException("Usuário deve possuir ID e nome válidos.");
         }
         this.id = id;
         this.nome = nome.trim();
