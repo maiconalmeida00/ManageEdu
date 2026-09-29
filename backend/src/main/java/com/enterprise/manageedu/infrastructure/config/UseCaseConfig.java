@@ -11,55 +11,29 @@ import com.enterprise.manageedu.domain.model.OperadorCaptacao;
 import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryCursoRepository;
 import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryLeadRepository;
 import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryOportunidadeRepository;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-@Configuration
 public class UseCaseConfig {
 
-    @Bean
-    public CursoRepository cursoRepository() {
-        return new InMemoryCursoRepository();
-    }
+    private final CursoRepository cursoRepository = new InMemoryCursoRepository();
+    private final LeadRepository leadRepository = new InMemoryLeadRepository();
+    private final OportunidadeRepository oportunidadeRepository = new InMemoryOportunidadeRepository();
 
-    @Bean
-    public LeadRepository leadRepository() {
-        return new InMemoryLeadRepository();
-    }
-
-    @Bean
-    public OportunidadeRepository oportunidadeRepository() {
-        return new InMemoryOportunidadeRepository();
-    }
-
-    @Bean
-    public CursoUseCase cursoUseCase(CursoRepository cursoRepository) {
+    public CursoUseCase cursoUseCase() {
         return new CursoUseCase(cursoRepository);
     }
 
-    @Bean
-    public LeadCandidatoUseCase leadCandidatoUseCase(
-            LeadRepository leadRepository,
-            CursoRepository cursoRepository
-    ) {
+    public LeadCandidatoUseCase leadCandidatoUseCase() {
         return new LeadCandidatoUseCase(leadRepository, cursoRepository);
     }
 
-    @Bean
-    public OportunidadeMatriculaUseCase oportunidadeMatriculaUseCase(
-            OportunidadeRepository oportunidadeRepository,
-            LeadRepository leadRepository,
-            CursoRepository cursoRepository
-    ) {
+    public OportunidadeMatriculaUseCase oportunidadeMatriculaUseCase() {
         return new OportunidadeMatriculaUseCase(oportunidadeRepository, leadRepository, cursoRepository);
     }
 
-    @Bean
     public Administrador administradorPadrao() {
         return new Administrador(1L, "Ana Administradora");
     }
 
-    @Bean
     public OperadorCaptacao operadorPadrao() {
         return new OperadorCaptacao(2L, "Carlos Captacao");
     }

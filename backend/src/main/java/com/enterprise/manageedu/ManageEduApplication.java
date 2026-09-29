@@ -19,13 +19,20 @@
 
 package com.enterprise.manageedu;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import com.enterprise.manageedu.adapters.cli.CliRunner;
+import com.enterprise.manageedu.infrastructure.config.UseCaseConfig;
 
-@SpringBootApplication
 public class ManageEduApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ManageEduApplication.class, args);
+        UseCaseConfig config = new UseCaseConfig();
+        CliRunner cliRunner = new CliRunner(
+                config.cursoUseCase(),
+                config.leadCandidatoUseCase(),
+                config.oportunidadeMatriculaUseCase(),
+                config.administradorPadrao(),
+                config.operadorPadrao()
+        );
+        cliRunner.run(args);
     }
 }
