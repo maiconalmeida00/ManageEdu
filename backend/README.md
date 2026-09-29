@@ -8,8 +8,6 @@ Atualmente, o sistema possui uma interface de linha de comando (CLI), é executa
 
 - Java 21
 - Maven
-- JUnit 5 para os testes
-- Spring Boot apenas como dependência legada dos testes ainda não migrados
 
 ## Arquitetura
 
@@ -45,15 +43,12 @@ Os DTOs separam os dados recebidos e devolvidos pela aplicação dos objetos do 
 
 ### `domain`
 
-É o núcleo do sistema. Contém:
+É o núcleo do sistema. Contém:# ManageEdu
 
-- modelos como `Curso`, `LeadCandidato`, `OportunidadeMatricula` e `Usuario`;
-- papéis `Administrador` e `OperadorCaptacao`;
-- enums de modalidade, turno e status;
-- exceções de negócio e de recurso não encontrado;
-- interfaces dos repositórios.
+Backend de um CRM educacional para gerenciar cursos, leads/candidatos e oportunidades de matrícula.
 
-As regras mais importantes ficam no domínio. Por exemplo, uma oportunidade sempre começa em `NOVO_LEAD`, normaliza a observação e valida o limite de 500 caracteres. A enumeração `StatusOportunidade` define as transições permitidas do funil.
+Atualmente, o sistema possui uma interface de linha de comando (CLI), é executado como uma aplicação Java convencional e mantém os dados apenas em memória durante a execução.
+
 
 ### `infrastructure`
 
@@ -168,30 +163,19 @@ java -cp target\classes com.enterprise.manageedu.ManageEduApplication
 & "$env:JAVA_HOME\bin\java.exe" -cp target\classes com.enterprise.manageedu.ManageEduApplication
 ```
 
-Para executar os testes:
-
-```powershell
-./mvnw test
-```
-
-Os testes de negócio não dependem da aplicação em execução. A suíte ainda contém um teste de contexto legado que utiliza `@SpringBootTest` e depende da configuração Spring anterior; ele deverá ser convertido para um teste da composição manual em uma etapa futura.
-
-## Testes
-
-Os testes em `src/test/java` verificam, entre outros cenários:
-
-- criação e validação de cursos;
-- criação de leads e validação de e-mail;
-- rejeição de referências inexistentes;
-- criação de oportunidades com status inicial;
-- transições válidas e inválidas do funil;
-- permissões de administrador e operador;
-- operações CRUD dos repositórios em memória.
-
 ## Limitações e próximos passos
 
-- Os dados não são persistidos após o encerramento do processo.
-- A entrada atual é exclusivamente via CLI; não há controllers REST ou frontend integrado neste módulo.
-- Não há autenticação real: a aplicação alterna entre dois usuários padrão.
-- A suíte de testes ainda contém um teste de contexto baseado em Spring Boot, embora a aplicação principal não utilize mais o framework.
-- Para produção, o próximo passo natural é substituir as implementações `InMemory*Repository` por uma persistência real, mantendo as interfaces do domínio, e adicionar uma camada de API para consumo externo.
+O backend está preparado para ser o núcleo da aplicação, mas ainda não expõe uma API HTTP. A CLI é atualmente o único adaptador de entrada e os dados são mantidos apenas em memória.
+
+Para a Parte 2, o próximo objetivo é disponibilizar este backend para consumo pelo frontend por meio de uma API REST. A evolução será:
+
+1. Criar um adaptador HTTP em `adapters/rest`, mantendo os casos de uso e o domínio independentes da tecnologia web.
+2. Definir endpoints para cursos, leads e oportunidades, cobrindo cadastro, consulta, atualização, remoção, filtros por status e alteração de status.
+3. Mapear os DTOs de aplicação para contratos JSON estáveis, documentando campos obrigatórios, formatos, enums e códigos HTTP.
+4. Padronizar respostas de erro para validações, recursos inexistentes, transições inválidas e falta de permissão.
+5. Substituir a composição exclusiva da CLI por uma composição que permita iniciar a API e, se necessário, manter a CLI como outro adaptador.
+6. Substituir os repositórios `InMemory*Repository` por uma persistência durável, mantendo as interfaces dos repositórios no domínio.
+7. Implementar autenticação e autorização reais antes de expor operações protegidas, especialmente a alteração de status das oportunidades.
+8. Adicionar documentação da API, para orientar a integração do frontend.
+
+O frontend da Parte 2 poderá consumir esses endpoints sem acessar diretamente as entidades ou os repositórios. Assim, a arquitetura atual é preservada: o novo adaptador HTTP traduzirá as requisições e respostas, enquanto as regras continuam em `application` e `domain`.
