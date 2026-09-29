@@ -2,14 +2,14 @@
 
 Backend de um CRM educacional para gerenciar cursos, leads/candidatos e oportunidades de matrícula.
 
-Atualmente, o sistema possui uma interface de linha de comando (CLI), é executado como uma aplicação Spring Boot e mantém os dados apenas em memória durante a execução.
+Atualmente, o sistema possui uma interface de linha de comando (CLI), é executado como uma aplicação Java convencional e mantém os dados apenas em memória durante a execução.
 
 ## Tecnologias
 
 - Java 21
-- Spring Boot 3.4.5
 - Maven
 - JUnit 5 para os testes
+- Spring Boot apenas como dependência legada dos testes ainda não migrados
 
 ## Arquitetura
 
@@ -24,7 +24,7 @@ infrastructure/   -> configuração e implementações técnicas
 
 ### `adapters/cli`
 
-Contém a interface de linha de comando. O `CliRunner` inicia o menu depois que o contexto do Spring é carregado. O `MenuPrincipal` encaminha as opções para os menus especializados:
+Contém a interface de linha de comando. O `CliRunner` inicia o menu depois que as dependências são montadas pela aplicação. O `MenuPrincipal` encaminha as opções para os menus especializados:
 
 - `CursoMenu`: cadastro, consulta, atualização e remoção de cursos;
 - `LeadMenu`: gerenciamento de leads/candidatos;
@@ -57,7 +57,7 @@ As regras mais importantes ficam no domínio. Por exemplo, uma oportunidade semp
 
 ### `infrastructure`
 
-`UseCaseConfig` configura os beans do Spring e conecta as interfaces de repositório às implementações em memória:
+`UseCaseConfig` realiza a composição manual das dependências e conecta as interfaces de repositório às implementações em memória:
 
 - `InMemoryCursoRepository`;
 - `InMemoryLeadRepository`;
@@ -69,14 +69,12 @@ Os repositórios usam `LinkedHashMap` e geram IDs sequenciais. Como não existe 
 
 ### 1. Inicialização
 
-1. A classe `ManageEduApplication` executa `SpringApplication.run(...)`.
-2. O Spring procura componentes e configurações no pacote `com.enterprise.manageedu`.
-3. `UseCaseConfig` cria os repositórios em memória, os casos de uso e os usuários padrão:
+1. A classe `ManageEduApplication` cria uma instância de `UseCaseConfig`.
+2. `UseCaseConfig` cria os repositórios em memória, os casos de uso e os usuários padrão:
    - Administrador: `Ana Administradora`;
    - Operador de captação: `Carlos Captacao`.
-4. O Spring cria o `CliRunner`. Ele é habilitado por padrão e pode ser desabilitado com `manageedu.cli.enabled=false`.
-5. Depois da inicialização do contexto, o Spring chama `CliRunner.run(...)`.
-6. O runner cria o `MenuPrincipal`, injeta os casos de uso e inicia o loop interativo.
+3. `ManageEduApplication` cria o `CliRunner` e fornece os casos de uso e usuários por construtor.
+4. O runner cria o `MenuPrincipal` e inicia o loop interativo.
 
 ### 2. Interação com o menu
 
@@ -153,13 +151,21 @@ Os menus capturam essas exceções e mostram a mensagem no terminal, mantendo a 
 No diretório `backend`:
 
 ```powershell
-./mvnw spring-boot:run
+./mvnw compile
+java -cp target/classes com.enterprise.manageedu.ManageEduApplication
 ```
 
 No Windows PowerShell, também é possível usar:
 
 ```powershell
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd compile
+java -cp target\classes com.enterprise.manageedu.ManageEduApplication
+```
+
+É necessário utilizar Java 21 para executar a aplicação. Quando o `java` padrão do terminal apontar para outra versão, use o executável do JDK 21 diretamente:
+
+```powershell
+& "$env:JAVA_HOME\bin\java.exe" -cp target\classes com.enterprise.manageedu.ManageEduApplication
 ```
 
 Para executar os testes:
@@ -167,6 +173,8 @@ Para executar os testes:
 ```powershell
 ./mvnw test
 ```
+
+Os testes de negócio não dependem da aplicação em execução. A suíte ainda contém um teste de contexto legado que utiliza `@SpringBootTest` e depende da configuração Spring anterior; ele deverá ser convertido para um teste da composição manual em uma etapa futura.
 
 ## Testes
 
@@ -185,4 +193,5 @@ Os testes em `src/test/java` verificam, entre outros cenários:
 - Os dados não são persistidos após o encerramento do processo.
 - A entrada atual é exclusivamente via CLI; não há controllers REST ou frontend integrado neste módulo.
 - Não há autenticação real: a aplicação alterna entre dois usuários padrão.
+- A suíte de testes ainda contém um teste de contexto baseado em Spring Boot, embora a aplicação principal não utilize mais o framework.
 - Para produção, o próximo passo natural é substituir as implementações `InMemory*Repository` por uma persistência real, mantendo as interfaces do domínio, e adicionar uma camada de API para consumo externo.
