@@ -1,126 +1,78 @@
-# ManageEdu
+﻿# ManageEdu
 
 Backend de um CRM educacional para gerenciar cursos, leads/candidatos e oportunidades de matrícula.
 
-Atualmente, o sistema possui uma interface de linha de comando (CLI), é executado como uma aplicação Java convencional e mantém os dados apenas em memória durante a execução.
+A aplicação foi implementada como um sistema Java puro executado no terminal, com persistência em memória e regras de negócio centralizadas no domínio e nos casos de uso.
+
+## Proposta do sistema
+
+O ManageEdu organiza a captação de interessados e acompanha oportunidades de matrícula em instituições de ensino, permitindo que equipes de captação, atendimento e secretaria acadêmica controlem cursos, leads e o funil de vendas.
+
+## Público-alvo
+
+O sistema é voltado para equipes de captação, atendimento, secretaria acadêmica e gestores de instituições de ensino que precisam controlar interessados, cursos e oportunidades de matrícula em um ambiente simples e operacional.
 
 ## Tecnologias
 
 - Java 21
 - Maven
+- Interface de terminal/CLI
+- Repositórios em memória
 
 ## Arquitetura
 
-O projeto é organizado em camadas, seguindo uma abordagem próxima de Clean Architecture/Arquitetura Hexagonal:
+O projeto é organizado em camadas, com a lógica central de negócio separada da interface de usuário:
 
 ```text
-adapters/cli       -> entrada e interação com o usuário
+adapters/cli       -> interação com o usuário via terminal
 application/       -> casos de uso e DTOs
-domain/            -> regras de negócio e contratos
-infrastructure/   -> configuração e implementações técnicas
+infrastructure/    -> composição manual e persistência em memória
+domain/            -> entidades, regras de negócio e enumerações
 ```
 
 ### `adapters/cli`
 
-Contém a interface de linha de comando. O `CliRunner` inicia o menu depois que as dependências são montadas pela aplicação. O `MenuPrincipal` encaminha as opções para os menus especializados:
+Contém os menus interativos e a leitura de entrada do usuário:
 
-- `CursoMenu`: cadastro, consulta, atualização e remoção de cursos;
-- `LeadMenu`: gerenciamento de leads/candidatos;
-- `OportunidadeMenu`: gerenciamento e alteração de status das oportunidades;
-- `MenuPrincipal`: alternância de usuário, exibição do funil e encerramento.
-
-Essa camada lê as entradas do teclado, chama os casos de uso e apresenta os resultados ou mensagens de erro. Ela não deve conter as regras centrais do negócio.
+- `CursoMenu`: cadastro, listagem, busca, atualização e remoção de cursos;
+- `LeadMenu`: cadastro, listagem, busca, atualização e remoção de leads/candidatos;
+- `OportunidadeMenu`: criação, listagem, busca, atualização e alteração de status;
+- `MenuPrincipal`: coordenador do menu principal, alternância de usuário e exibição do funil.
 
 ### `application`
 
-Representa os casos de uso da aplicação:
+Responsável pelos casos de uso da aplicação:
 
-- `CursoUseCase`: operações de CRUD de cursos;
-- `LeadCandidatoUseCase`: operações de CRUD de leads, validando o curso de interesse;
-- `OportunidadeMatriculaUseCase`: criação, consulta, atualização, remoção, filtragem por status e alteração do status das oportunidades.
-
-Os DTOs separam os dados recebidos e devolvidos pela aplicação dos objetos do domínio. Os casos de uso também coordenam as dependências entre entidades: um lead precisa referenciar um curso existente, e uma oportunidade precisa referenciar um lead e um curso existentes.
+- `CursoUseCase`: operações de CRUD com validação de relacionamento;
+- `LeadCandidatoUseCase`: cadastro e validação de lead, incluindo curso de interesse;
+- `OportunidadeMatriculaUseCase`: criação, atualização, consulta, remoção e transição de status.
 
 ### `domain`
 
-É o núcleo do sistema. Contém:# ManageEdu
+Contém o núcleo do sistema:
 
-Backend de um CRM educacional para gerenciar cursos, leads/candidatos e oportunidades de matrícula.
-
-Atualmente, o sistema possui uma interface de linha de comando (CLI), é executado como uma aplicação Java convencional e mantém os dados apenas em memória durante a execução.
-
+- `Curso`
+- `LeadCandidato`
+- `OportunidadeMatricula`
+- `StatusOportunidade`
+- `Usuario`
+- `Administrador`
+- `OperadorCaptacao`
+- exceções de negócio e regras de transição de status
 
 ### `infrastructure`
 
-`UseCaseConfig` realiza a composição manual das dependências e conecta as interfaces de repositório às implementações em memória:
+A composição manual das dependências é feita pela classe `UseCaseConfig`, que conecta os repositórios em memória aos casos de uso:
 
-- `InMemoryCursoRepository`;
-- `InMemoryLeadRepository`;
-- `InMemoryOportunidadeRepository`.
+- `InMemoryCursoRepository`
+- `InMemoryLeadRepository`
+- `InMemoryOportunidadeRepository`
 
-Os repositórios usam `LinkedHashMap` e geram IDs sequenciais. Como não existe banco de dados configurado, todos os dados são perdidos quando a aplicação é encerrada.
-
-## Fluxo do sistema desde o início
-
-### 1. Inicialização
-
-1. A classe `ManageEduApplication` cria uma instância de `UseCaseConfig`.
-2. `UseCaseConfig` cria os repositórios em memória, os casos de uso e os usuários padrão:
-   - Administrador: `Ana Administradora`;
-   - Operador de captação: `Carlos Captacao`.
-3. `ManageEduApplication` cria o `CliRunner` e fornece os casos de uso e usuários por construtor.
-4. O runner cria o `MenuPrincipal` e inicia o loop interativo.
-
-### 2. Interação com o menu
-
-O menu principal permanece em um loop até o usuário escolher `0`:
-
-```text
-MenuPrincipal
-  ├─ 1 -> CursoMenu
-  ├─ 2 -> LeadMenu
-  ├─ 3 -> OportunidadeMenu
-  ├─ 4 -> funil agrupado por status
-  ├─ 5 -> alterna administrador/operador
-  └─ 0 -> encerra a aplicação
-```
-
-Cada menu coleta os dados, monta um DTO de requisição e chama o caso de uso correspondente. O caso de uso valida os dados, cria ou altera entidades do domínio, chama um repositório e converte o resultado em DTO de resposta. O menu então imprime o resultado.
-
-### 3. Exemplo: cadastro de curso
-
-```text
-usuário
-  -> CursoMenu
-  -> CursoUseCase.cadastrar
-  -> validação de nome, modalidade e turno
-  -> criação de Curso
-  -> CursoRepository.salvar
-  -> InMemoryCursoRepository
-  -> CursoResponseDTO
-  -> exibição no terminal
-```
-
-### 4. Exemplo: criação de lead
-
-1. O usuário informa os dados do lead e o ID do curso de interesse.
-2. `LeadMenu` cria um `LeadCandidatoRequestDTO`.
-3. `LeadCandidatoUseCase` valida a requisição e procura o curso no `CursoRepository`.
-4. Se o curso não existir, é lançada `ResourceNotFoundException`.
-5. O caso de uso cria o `LeadCandidato`, salva-o no `LeadRepository` e devolve um `LeadCandidatoResponseDTO`.
-
-### 5. Exemplo: criação e avanço de oportunidade
-
-1. O usuário informa o ID do lead, o ID do curso e uma observação opcional.
-2. `OportunidadeMatriculaUseCase` confirma que o lead e o curso existem.
-3. `OportunidadeMatricula` é criada com status inicial `NOVO_LEAD` e data de criação.
-4. A oportunidade é salva no `OportunidadeRepository`.
-5. Para mudar o status, o caso de uso valida o usuário, a permissão do papel e a transição definida no domínio.
-6. A oportunidade é salva novamente e o menu exibe o novo estado.
+Os dados são mantidos apenas em memória durante a execução da aplicação.
 
 ## Funil de matrícula
 
-As transições permitidas são:
+As transições permitidas seguem o fluxo do projeto em Parte 1:
 
 ```text
 NOVO_LEAD -> CONTATO -> DOCUMENTACAO -> MATRICULA_CONFIRMADA
@@ -128,18 +80,79 @@ NOVO_LEAD -> CONTATO -> DOCUMENTACAO -> MATRICULA_CONFIRMADA
      +----------> DESISTENCIA <-+
 ```
 
-Na prática, qualquer estado não final pode avançar para `DESISTENCIA`. `MATRICULA_CONFIRMADA` e `DESISTENCIA` são estados finais e não permitem novas transições.
+Regra de negócio aplicada:
 
-O operador de captação pode avançar pelas etapas operacionais, mas não pode confirmar a matrícula. O administrador pode executar qualquer transição válida do funil, inclusive `DOCUMENTACAO -> MATRICULA_CONFIRMADA`.
+- `NOVO_LEAD` pode ir para `CONTATO` ou `DESISTENCIA`;
+- `CONTATO` pode ir para `DOCUMENTACAO` ou `DESISTENCIA`;
+- `DOCUMENTACAO` pode ir para `MATRICULA_CONFIRMADA` ou `DESISTENCIA`;
+- `MATRICULA_CONFIRMADA` e `DESISTENCIA` são finais.
 
-A opção de funil consulta todos os valores de `StatusOportunidade`, busca as oportunidades por status e apresenta a quantidade e os registros de cada grupo.
+O perfil `Administrador` pode executar qualquer transição válida. O perfil `OperadorCaptacao` pode executar transições operacionais válidas, mas não pode confirmar matrícula.
 
-## Tratamento de erros
+## Regras de negócio atuais
 
-- `RegraDeNegocioException`: dados inválidos, IDs inválidos, transições não permitidas ou falta de permissão;
-- `ResourceNotFoundException`: curso, lead ou oportunidade não encontrado.
+- Validação de e-mail com padrão básico e rejeição de entradas inválidas;
+- Validação de telefone com remoção de caracteres não numéricos e exigência de 10 ou 11 dígitos;
+- Consistência entre o curso de interesse do lead e o curso da oportunidade;
+- Bloqueio de remoção de lead com oportunidades vinculadas;
+- Bloqueio de remoção de curso vinculados a leads ou oportunidades;
+- Proteção contra `id` nulo, zero, negativo ou redefinido após atribuição.
 
-Os menus capturam essas exceções e mostram a mensagem no terminal, mantendo a aplicação em execução para que o usuário possa tentar novamente.
+## Fluxo do sistema desde o início
+
+### 1. Inicialização
+
+A aplicação começa na classe `ManageEduApplication`, que monta a configuração manual dos casos de uso e instância o `CliRunner`:
+
+1. `UseCaseConfig` cria os repositórios em memória;
+2. `UseCaseConfig` cria os casos de uso;
+3. `UseCaseConfig` define os usuários padrão:
+   - `Administrador` com ID 1;
+   - `OperadorCaptacao` com ID 2;
+4. `ManageEduApplication` inicia o runner da CLI.
+
+### 2. Interação com o menu
+
+O `CliRunner` inicia o `MenuPrincipal`, que permanece em um loop até o usuário sair. A partir daí, as opções levam para os menus específicos:
+
+```text
+MenuPrincipal
+  ├─ 1 -> CursoMenu
+  ├─ 2 -> LeadMenu
+  ├─ 3 -> OportunidadeMenu
+  ├─ 4 -> Funil de matrícula
+  ├─ 5 -> Alternar usuário ativo
+  └─ 0 -> Encerrar aplicação
+```
+
+### 3. Cadastro de curso
+
+Quando o usuário escolhe a opção de cursos, o `CursoMenu` coleta os dados e chama `CursoUseCase.cadastrar`. O caso de uso valida nome, modalidade e turno e salva o objeto `Curso` no repositório em memória.
+
+### 4. Cadastro de lead
+
+Ao cadastrar um lead, o `LeadMenu` coleta nome, e-mail, telefone, origem e curso de interesse. O `LeadCandidatoUseCase` valida os dados e confirma que o curso informado existe antes de criar o `LeadCandidato`.
+
+### 5. Criação de oportunidade
+
+A criação de oportunidade ocorre no `OportunidadeMenu`, que solicita ID do lead e ID do curso. O `OportunidadeMatriculaUseCase` valida:
+
+- existência do lead;
+- existência do curso;
+- consistência entre o curso do lead e o curso da oportunidade.
+
+Em seguida, a oportunidade é criada com status inicial `NOVO_LEAD`.
+
+### 6. Alteração de status
+
+A alteração de status é feita por `OportunidadeMatriculaUseCase.alterarStatus`, que:
+
+- valida o ID da oportunidade;
+- valida a transição usando `StatusOportunidade`;
+- valida a permissão do usuário ativo;
+- atualiza o status da oportunidade.
+
+O `Supplier<Usuario>` presente no `OportunidadeMenu` garante que o menu consulte o usuário ativo no momento da operação, evitando referência desatualizada.
 
 ## Como executar
 
@@ -150,32 +163,30 @@ No diretório `backend`:
 java -cp target/classes com.enterprise.manageedu.ManageEduApplication
 ```
 
-No Windows PowerShell, também é possível usar:
+No Windows PowerShell:
 
 ```powershell
 .\mvnw.cmd compile
 java -cp target\classes com.enterprise.manageedu.ManageEduApplication
 ```
 
-É necessário utilizar Java 21 para executar a aplicação. Quando o `java` padrão do terminal apontar para outra versão, use o executável do JDK 21 diretamente:
+## Parte 1 — Implementado
 
-```powershell
-& "$env:JAVA_HOME\bin\java.exe" -cp target\classes com.enterprise.manageedu.ManageEduApplication
-```
+- Aplicação Java pura executada no terminal
+- CRUD em memória de cursos
+- CRUD em memória de leads/candidatos
+- CRUD em memória de oportunidades de matrícula
+- Validação de dados
+- Funil de status
+- Perfis Administrador e Operador de Captação
+- Encapsulamento, herança e polimorfismo
 
-## Limitações e próximos passos
+## Parte 2 — Previsto
 
-O backend está preparado para ser o núcleo da aplicação, mas ainda não expõe uma API HTTP. A CLI é atualmente o único adaptador de entrada e os dados são mantidos apenas em memória.
-
-Para a Parte 2, o próximo objetivo é disponibilizar este backend para consumo pelo frontend por meio de uma API REST. A evolução será:
-
-1. Criar um adaptador HTTP em `adapters/rest`, mantendo os casos de uso e o domínio independentes da tecnologia web.
-2. Definir endpoints para cursos, leads e oportunidades, cobrindo cadastro, consulta, atualização, remoção, filtros por status e alteração de status.
-3. Mapear os DTOs de aplicação para contratos JSON estáveis, documentando campos obrigatórios, formatos, enums e códigos HTTP.
-4. Padronizar respostas de erro para validações, recursos inexistentes, transições inválidas e falta de permissão.
-5. Substituir a composição exclusiva da CLI por uma composição que permita iniciar a API e, se necessário, manter a CLI como outro adaptador.
-6. Substituir os repositórios `InMemory*Repository` por uma persistência durável, mantendo as interfaces dos repositórios no domínio.
-7. Implementar autenticação e autorização reais antes de expor operações protegidas, especialmente a alteração de status das oportunidades.
-8. Adicionar documentação da API, para orientar a integração do frontend.
-
-O frontend da Parte 2 poderá consumir esses endpoints sem acessar diretamente as entidades ou os repositórios. Assim, a arquitetura atual é preservada: o novo adaptador HTTP traduzirá as requisições e respostas, enquanto as regras continuam em `application` e `domain`.
+- Banco de dados
+- API REST
+- Uso do Spring Boot
+- Interface gráfica ou web
+- Login funcional
+- Upload de documentos e fotos
+- Logs em arquivo
