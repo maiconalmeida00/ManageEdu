@@ -19,11 +19,11 @@ public class UseCaseConfig {
     private final OportunidadeRepository oportunidadeRepository = new InMemoryOportunidadeRepository();
 
     public CursoUseCase cursoUseCase() {
-        return new CursoUseCase(cursoRepository);
+        return new CursoUseCase(cursoRepository, leadRepository, oportunidadeRepository);
     }
 
     public LeadCandidatoUseCase leadCandidatoUseCase() {
-        return new LeadCandidatoUseCase(leadRepository, cursoRepository);
+        return new LeadCandidatoUseCase(leadRepository, cursoRepository, oportunidadeRepository);
     }
 
     public OportunidadeMatriculaUseCase oportunidadeMatriculaUseCase() {

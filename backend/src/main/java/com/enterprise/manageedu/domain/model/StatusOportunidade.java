@@ -39,9 +39,7 @@ public enum StatusOportunidade {
             throw new RegraDeNegocioException("O novo status da oportunidade não pode ser nulo.");
         }
         if (!transicaoPermitida(atual, novo)) {
-            throw new RegraDeNegocioException(
-                    "Transição de " + atual + " para " + novo + " não permitida no funil."
-            );
+            throw new RegraDeNegocioException("Transição de status não permitida.");
         }
     }
 }

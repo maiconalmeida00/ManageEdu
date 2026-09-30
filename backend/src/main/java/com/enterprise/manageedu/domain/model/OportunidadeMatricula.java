@@ -24,6 +24,7 @@ public class OportunidadeMatricula {
         if (curso == null) {
             throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
+        validarConsistenciaCursoLead(leadCandidato, curso);
 
         this.leadCandidato = leadCandidato;
         this.curso = curso;
@@ -33,6 +34,12 @@ public class OportunidadeMatricula {
     }
 
     public void definirId(Long id) {
+        if (id == null || id <= 0) {
+            throw new RegraDeNegocioException("ID inválido.");
+        }
+        if (this.id != null) {
+            throw new RegraDeNegocioException("O ID já foi definido.");
+        }
         this.id = id;
     }
 
@@ -43,6 +50,7 @@ public class OportunidadeMatricula {
         if (curso == null) {
             throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
+        validarConsistenciaCursoLead(leadCandidato, curso);
 
         this.leadCandidato = leadCandidato;
         this.curso = curso;
@@ -56,6 +64,15 @@ public class OportunidadeMatricula {
 
     public void atualizarObservacao(String observacao) {
         this.observacao = normalizarObservacao(observacao);
+    }
+
+    private void validarConsistenciaCursoLead(LeadCandidato leadCandidato, Curso curso) {
+        if (leadCandidato.getCursoInteresse() == null || curso == null) {
+            return;
+        }
+        if (!leadCandidato.getCursoInteresse().getId().equals(curso.getId())) {
+            throw new RegraDeNegocioException("O curso da oportunidade deve ser igual ao curso de interesse do lead.");
+        }
     }
 
     private String normalizarObservacao(String observacao) {

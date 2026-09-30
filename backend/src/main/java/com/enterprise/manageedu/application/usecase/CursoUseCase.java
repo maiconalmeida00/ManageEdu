@@ -8,6 +8,8 @@ import com.enterprise.manageedu.domain.model.Curso;
 import com.enterprise.manageedu.domain.model.ModalidadeCurso;
 import com.enterprise.manageedu.domain.model.TurnoCurso;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
+import com.enterprise.manageedu.domain.repository.LeadRepository;
+import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -15,9 +17,17 @@ import java.util.stream.Collectors;
 public class CursoUseCase {
 
     private final CursoRepository cursoRepository;
+    private final LeadRepository leadRepository;
+    private final OportunidadeRepository oportunidadeRepository;
 
-    public CursoUseCase(CursoRepository cursoRepository) {
+    public CursoUseCase(
+            CursoRepository cursoRepository,
+            LeadRepository leadRepository,
+            OportunidadeRepository oportunidadeRepository
+    ) {
         this.cursoRepository = cursoRepository;
+        this.leadRepository = leadRepository;
+        this.oportunidadeRepository = oportunidadeRepository;
     }
 
     public CursoResponseDTO cadastrar(CursoRequestDTO request) {
@@ -37,7 +47,7 @@ public class CursoUseCase {
     public CursoResponseDTO buscarPorId(Long id) {
         validarId(id);
         Curso curso = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
         return toResponse(curso);
     }
 
@@ -54,7 +64,7 @@ public class CursoUseCase {
         }
 
         Curso existente = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
 
         existente.atualizarDados(
             request.nome(),
@@ -67,14 +77,29 @@ public class CursoUseCase {
 
     public void remover(Long id) {
         validarId(id);
-        cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + id));
+        Curso curso = cursoRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
+
+        boolean vinculadoLead = leadRepository.listarTodos().stream()
+                .anyMatch(lead -> lead.getCursoInteresse() != null
+                        && lead.getCursoInteresse().getId() != null
+                        && lead.getCursoInteresse().getId().equals(curso.getId()));
+
+        boolean vinculadoOportunidade = oportunidadeRepository.listarTodos().stream()
+                .anyMatch(oportunidade -> oportunidade.getCurso() != null
+                        && oportunidade.getCurso().getId() != null
+                        && oportunidade.getCurso().getId().equals(curso.getId()));
+
+        if (vinculadoLead || vinculadoOportunidade) {
+            throw new RegraDeNegocioException("Não é possível excluir o curso porque existem leads ou oportunidades vinculados.");
+        }
+
         cursoRepository.remover(id);
     }
 
     private void validarId(Long id) {
         if (id == null || id <= 0) {
-            throw new RegraDeNegocioException("ID do curso deve ser maior que zero.");
+            throw new RegraDeNegocioException("ID do curso inválido.");
         }
     }
 

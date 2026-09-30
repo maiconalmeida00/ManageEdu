@@ -8,6 +8,7 @@ import com.enterprise.manageedu.domain.model.Curso;
 import com.enterprise.manageedu.domain.model.LeadCandidato;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
+import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,10 +17,16 @@ public class LeadCandidatoUseCase {
 
     private final LeadRepository leadRepository;
     private final CursoRepository cursoRepository;
+    private final OportunidadeRepository oportunidadeRepository;
 
-    public LeadCandidatoUseCase(LeadRepository leadRepository, CursoRepository cursoRepository) {
+    public LeadCandidatoUseCase(
+            LeadRepository leadRepository,
+            CursoRepository cursoRepository,
+            OportunidadeRepository oportunidadeRepository
+    ) {
         this.leadRepository = leadRepository;
         this.cursoRepository = cursoRepository;
+        this.oportunidadeRepository = oportunidadeRepository;
     }
 
     public LeadCandidatoResponseDTO cadastrar(LeadCandidatoRequestDTO request) {
@@ -43,7 +50,7 @@ public class LeadCandidatoUseCase {
     public LeadCandidatoResponseDTO buscarPorId(Long id) {
         validarId(id);
         LeadCandidato lead = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
         return toResponse(lead);
     }
 
@@ -60,7 +67,7 @@ public class LeadCandidatoUseCase {
         }
 
         LeadCandidato existente = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
 
         Curso cursoInteresse = buscarCurso(request.cursoInteresseId());
 
@@ -77,8 +84,18 @@ public class LeadCandidatoUseCase {
 
     public void remover(Long id) {
         validarId(id);
-        leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + id));
+        LeadCandidato lead = leadRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+
+        boolean possuiOportunidade = oportunidadeRepository.listarTodos().stream()
+                .anyMatch(oportunidade -> oportunidade.getLeadCandidato() != null
+                        && oportunidade.getLeadCandidato().getId() != null
+                        && oportunidade.getLeadCandidato().getId().equals(lead.getId()));
+
+        if (possuiOportunidade) {
+            throw new RegraDeNegocioException("Não é possível excluir o lead porque existem oportunidades vinculadas.");
+        }
+
         leadRepository.remover(id);
     }
 
@@ -87,12 +104,12 @@ public class LeadCandidatoUseCase {
             throw new RegraDeNegocioException("O curso de interesse do lead é obrigatório.");
         }
         return cursoRepository.buscarPorId(cursoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + cursoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
     }
 
     private void validarId(Long id) {
         if (id == null || id <= 0) {
-            throw new RegraDeNegocioException("ID do lead deve ser maior que zero.");
+            throw new RegraDeNegocioException("ID do lead inválido.");
         }
     }
 

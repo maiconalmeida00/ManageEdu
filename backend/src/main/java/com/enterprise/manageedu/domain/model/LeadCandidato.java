@@ -22,6 +22,14 @@ public class LeadCandidato {
     }
 
     public void definirId(Long id) {
+        if (id == null || id <= 0) {
+            throw new RegraDeNegocioException("ID inválido.");
+        }
+
+        if (this.id != null) {
+            throw new RegraDeNegocioException("O ID já foi definido.");
+        }
+
         this.id = id;
     }
 
@@ -45,20 +53,31 @@ public class LeadCandidato {
         if (nome == null || nome.isBlank()) {
             throw new RegraDeNegocioException("O nome do lead é obrigatório.");
         }
-        if (email == null || email.isBlank()) {
-            throw new RegraDeNegocioException("O e-mail do lead é obrigatório.");
+
+        if (email == null || email.isBlank()
+                || !email.contains("@")
+                || !email.contains(".")) {
+            throw new RegraDeNegocioException("E-mail inválido.");
         }
-        if (!email.contains("@") || !email.contains(".")) {
-            throw new RegraDeNegocioException("O e-mail do lead deve ter um formato básico válido.");
-        }
+
         if (telefone == null || telefone.isBlank()) {
-            throw new RegraDeNegocioException("O telefone do lead é obrigatório.");
+            throw new RegraDeNegocioException("Telefone inválido.");
         }
+
+        String numerosTelefone = telefone.replaceAll("\\D", "");
+
+        if (numerosTelefone.length() < 8) {
+            throw new RegraDeNegocioException("Telefone inválido.");
+        }
+
         if (origem == null || origem.isBlank()) {
             throw new RegraDeNegocioException("A origem do lead é obrigatória.");
         }
+
         if (cursoInteresse == null) {
-            throw new RegraDeNegocioException("O curso de interesse do lead é obrigatório.");
+            throw new RegraDeNegocioException(
+                    "O curso de interesse do lead é obrigatório."
+            );
         }
 
         this.nome = nome.trim();

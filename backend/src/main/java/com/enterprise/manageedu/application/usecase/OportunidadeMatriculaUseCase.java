@@ -42,6 +42,7 @@ public class OportunidadeMatriculaUseCase {
 
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
         Curso curso = buscarCurso(request.cursoId());
+        validarConsistenciaCursoLead(lead, curso);
 
         OportunidadeMatricula oportunidade = new OportunidadeMatricula(lead, curso, request.observacao());
         OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
@@ -51,7 +52,7 @@ public class OportunidadeMatriculaUseCase {
     public OportunidadeMatriculaResponseDTO buscarPorId(Long id) {
         validarId(id);
         OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
         return toResponse(oportunidade);
     }
 
@@ -85,10 +86,11 @@ public class OportunidadeMatriculaUseCase {
         }
 
         OportunidadeMatricula existente = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
 
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
         Curso curso = buscarCurso(request.cursoId());
+        validarConsistenciaCursoLead(lead, curso);
 
         existente.atualizarDados(lead, curso, request.observacao());
         OportunidadeMatricula salva = oportunidadeRepository.salvar(existente);
@@ -112,10 +114,10 @@ public class OportunidadeMatriculaUseCase {
         }
 
         OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
 
         if (!usuario.podeAlterarStatus(oportunidade.getStatus(), request.novoStatus())) {
-            throw new RegraDeNegocioException("Usuário sem permissão para alterar este status.");
+            throw new RegraDeNegocioException("Transição de status não permitida.");
         }
 
         oportunidade.alterarStatus(request.novoStatus());
@@ -126,7 +128,7 @@ public class OportunidadeMatriculaUseCase {
     public void remover(Long id) {
         validarId(id);
         oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada para o ID: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
         oportunidadeRepository.remover(id);
     }
 
@@ -135,7 +137,7 @@ public class OportunidadeMatriculaUseCase {
             throw new RegraDeNegocioException("O lead da oportunidade é obrigatório.");
         }
         return leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado para o ID: " + leadId));
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
     }
 
     private Curso buscarCurso(Long cursoId) {
@@ -143,12 +145,21 @@ public class OportunidadeMatriculaUseCase {
             throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
         }
         return cursoRepository.buscarPorId(cursoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado para o ID: " + cursoId));
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
+    }
+
+    private void validarConsistenciaCursoLead(LeadCandidato lead, Curso curso) {
+        if (lead == null || lead.getCursoInteresse() == null || curso == null) {
+            return;
+        }
+        if (!lead.getCursoInteresse().getId().equals(curso.getId())) {
+            throw new RegraDeNegocioException("O curso da oportunidade deve ser igual ao curso de interesse do lead.");
+        }
     }
 
     private void validarId(Long id) {
         if (id == null || id <= 0) {
-            throw new RegraDeNegocioException("ID da oportunidade deve ser maior que zero.");
+            throw new RegraDeNegocioException("ID da oportunidade inválido.");
         }
     }
 

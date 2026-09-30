@@ -14,6 +14,12 @@ public class Curso {
     }
 
     public void definirId(Long id) {
+        if (id == null || id <= 0) {
+            throw new RegraDeNegocioException("ID inválido.");
+        }
+        if (this.id != null) {
+            throw new RegraDeNegocioException("O ID já foi definido.");
+        }
         this.id = id;
     }
 
