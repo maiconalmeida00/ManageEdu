@@ -2,7 +2,13 @@ package com.enterprise.manageedu.domain.model;
 
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 
+import java.util.regex.Pattern;
+
 public class LeadCandidato {
+
+    private static final Pattern EMAIL_VALIDO = Pattern.compile(
+            "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+    );
 
     private Long id;
     private String nome;
@@ -54,21 +60,8 @@ public class LeadCandidato {
             throw new RegraDeNegocioException("O nome do lead é obrigatório.");
         }
 
-        if (email == null || email.isBlank()
-                || !email.contains("@")
-                || !email.contains(".")) {
-            throw new RegraDeNegocioException("E-mail inválido.");
-        }
-
-        if (telefone == null || telefone.isBlank()) {
-            throw new RegraDeNegocioException("Telefone inválido.");
-        }
-
-        String numerosTelefone = telefone.replaceAll("\\D", "");
-
-        if (numerosTelefone.length() < 8) {
-            throw new RegraDeNegocioException("Telefone inválido.");
-        }
+        validarEmail(email);
+        validarTelefone(telefone);
 
         if (origem == null || origem.isBlank()) {
             throw new RegraDeNegocioException("A origem do lead é obrigatória.");
@@ -85,6 +78,28 @@ public class LeadCandidato {
         this.telefone = telefone.trim();
         this.origem = origem.trim();
         this.cursoInteresse = cursoInteresse;
+    }
+
+    private void validarEmail(String email) {
+        if (email == null || email.isBlank()) {
+            throw new RegraDeNegocioException("E-mail é obrigatório.");
+        }
+
+        if (!EMAIL_VALIDO.matcher(email.trim()).matches()) {
+            throw new RegraDeNegocioException("E-mail inválido.");
+        }
+    }
+
+    private void validarTelefone(String telefone) {
+        if (telefone == null || telefone.isBlank()) {
+            throw new RegraDeNegocioException("Telefone é obrigatório.");
+        }
+
+        String somenteNumeros = telefone.replaceAll("\\D", "");
+
+        if (somenteNumeros.length() < 10 || somenteNumeros.length() > 11) {
+            throw new RegraDeNegocioException("Telefone inválido.");
+        }
     }
 
     public Long getId() {
