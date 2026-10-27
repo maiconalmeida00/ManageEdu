@@ -44,7 +44,9 @@ public class OportunidadeMatriculaUseCase {
         Curso curso = buscarCurso(request.cursoId());
         validarConsistenciaCursoLead(lead, curso);
 
-        OportunidadeMatricula oportunidade = new OportunidadeMatricula(lead, curso, request.observacao());
+        OportunidadeMatricula oportunidade = new OportunidadeMatricula(
+                lead, curso, request.valorEstimado(), request.dataPrevista(), request.observacao()
+        );
         OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
         return toResponse(salva);
     }
@@ -92,12 +94,34 @@ public class OportunidadeMatriculaUseCase {
         Curso curso = buscarCurso(request.cursoId());
         validarConsistenciaCursoLead(lead, curso);
 
-        existente.atualizarDados(lead, curso, request.observacao());
+        existente.atualizarDados(
+                lead, curso, request.valorEstimado(), request.dataPrevista(), request.observacao()
+        );
         OportunidadeMatricula salva = oportunidadeRepository.salvar(existente);
         return toResponse(salva);
     }
 
-        public OportunidadeMatriculaResponseDTO alterarStatus(
+    // Reabertura é um fluxo separado da alteração comum de status.
+    public OportunidadeMatriculaResponseDTO reabrirOportunidade(
+            Long id,
+            String justificativa,
+            Usuario usuario
+    ) {
+        validarId(id);
+        if (usuario == null) {
+            throw new RegraDeNegocioException("Usuário responsável pela reabertura é obrigatório.");
+        }
+        if (!usuario.podeReabrirOportunidade()) {
+            throw new RegraDeNegocioException("Somente administradores podem reabrir oportunidades.");
+        }
+
+        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+        oportunidade.reabrir(justificativa, usuario);
+        return toResponse(oportunidadeRepository.salvar(oportunidade));
+    }
+
+    public OportunidadeMatriculaResponseDTO alterarStatus(
             Long id,
             AtualizarStatusOportunidadeDTO request,
             Usuario usuario
@@ -174,6 +198,9 @@ public class OportunidadeMatriculaUseCase {
                 curso != null ? curso.getNome() : null,
                 oportunidade.getStatus(),
                 oportunidade.getDataCriacao(),
+                oportunidade.getValorEstimado(),
+                oportunidade.getDataPrevista(),
+                oportunidade.getReaberturas(),
                 oportunidade.getObservacao()
         );
     }

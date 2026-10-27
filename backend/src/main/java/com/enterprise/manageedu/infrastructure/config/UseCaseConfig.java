@@ -14,6 +14,7 @@ import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryOportu
 
 public class UseCaseConfig {
 
+    // A composição manual injeta abstrações nos casos de uso sem acoplá-los à memória.
     private final CursoRepository cursoRepository = new InMemoryCursoRepository();
     private final LeadRepository leadRepository = new InMemoryLeadRepository();
     private final OportunidadeRepository oportunidadeRepository = new InMemoryOportunidadeRepository();

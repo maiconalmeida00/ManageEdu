@@ -10,6 +10,11 @@ import com.enterprise.manageedu.domain.model.StatusOportunidade;
 import com.enterprise.manageedu.domain.model.Usuario;
 
 import java.util.List;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.Scanner;
 import java.util.function.Supplier;
 
@@ -39,7 +44,8 @@ public class OportunidadeMenu {
             System.out.println("3. Buscar oportunidade por ID");
             System.out.println("4. Atualizar dados da oportunidade");
             System.out.println("5. Alterar status da oportunidade");
-            System.out.println("6. Excluir oportunidade");
+            System.out.println("6. Reabrir oportunidade");
+            System.out.println("7. Excluir oportunidade");
             System.out.println("0. Voltar");
             System.out.print("Escolha uma opção: ");
 
@@ -50,7 +56,8 @@ public class OportunidadeMenu {
                 case "3" -> buscarPorId();
                 case "4" -> atualizarDados();
                 case "5" -> alterarStatus();
-                case "6" -> excluir();
+                case "6" -> reabrir();
+                case "7" -> excluir();
                 case "0" -> voltar = true;
                 default -> System.out.println("Opção inválida. Tente novamente.");
             }
@@ -109,6 +116,19 @@ public class OportunidadeMenu {
         });
     }
 
+    private void reabrir() {
+        executar(() -> {
+            Long id = lerLong("ID da oportunidade: ");
+            System.out.print("Justificativa da reabertura: ");
+            String justificativa = sc.nextLine();
+            OportunidadeMatriculaResponseDTO reaberta = oportunidadeUseCase.reabrirOportunidade(
+                    id, justificativa, usuarioAtivo.get()
+            );
+            System.out.println("Oportunidade reaberta com sucesso.");
+            imprimirOportunidade(reaberta);
+        });
+    }
+
     private void excluir() {
         executar(() -> {
             Long id = lerLong("ID da oportunidade: ");
@@ -120,9 +140,38 @@ public class OportunidadeMenu {
     private OportunidadeMatriculaRequestDTO lerOportunidade() {
         Long leadId = lerLong("ID do lead: ");
         Long cursoId = lerLong("ID do curso: ");
+        BigDecimal valorEstimado = lerValorEstimado();
+        LocalDate dataPrevista = lerDataPrevista();
         System.out.print("Observação (opcional): ");
         String observacao = sc.nextLine();
-        return new OportunidadeMatriculaRequestDTO(leadId, cursoId, observacao);
+        return new OportunidadeMatriculaRequestDTO(
+                leadId, cursoId, valorEstimado, dataPrevista, observacao
+        );
+    }
+
+    private BigDecimal lerValorEstimado() {
+        System.out.print("Valor estimado (ex.: 1200,50 ou 1200.50; sem separador de milhar): ");
+        String valor = sc.nextLine().trim();
+        if (!valor.matches("\\d+(?:[,.]\\d+)?")) {
+            throw new IllegalArgumentException("Valor inválido. Use apenas números e, opcionalmente, duas casas decimais.");
+        }
+        try {
+            return new BigDecimal(valor.replace(',', '.'));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Valor estimado inválido.");
+        }
+    }
+
+    private LocalDate lerDataPrevista() {
+        System.out.print("Data prevista (dd/MM/aaaa): ");
+        String valor = sc.nextLine().trim();
+        DateTimeFormatter formato = DateTimeFormatter.ofPattern("dd/MM/uuuu")
+                .withResolverStyle(ResolverStyle.STRICT);
+        try {
+            return LocalDate.parse(valor, formato);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Data prevista inválida. Use uma data existente no formato dd/MM/aaaa.");
+        }
     }
 
     private StatusOportunidade lerStatus() {
@@ -153,8 +202,16 @@ public class OportunidadeMenu {
                         + " | Curso: " + oportunidade.cursoNome()
                         + " | Status: " + formatarStatus(oportunidade.status())
                         + " | Criação: " + oportunidade.dataCriacao()
+                        + " | Valor estimado: " + oportunidade.valorEstimado()
+                        + " | Data prevista: " + oportunidade.dataPrevista()
                         + " | Observação: " + (oportunidade.observacao() == null ? "-" : oportunidade.observacao())
         );
+        oportunidade.reaberturas().forEach(reabertura -> System.out.println(
+                "  Reabertura em " + reabertura.dataHora()
+                        + " por " + reabertura.responsavelNome()
+                        + " (" + reabertura.statusOrigem() + " -> " + reabertura.statusDestino() + ")"
+                        + ": " + reabertura.justificativa()
+        ));
     }
 
     public static String formatarStatus(StatusOportunidade status) {

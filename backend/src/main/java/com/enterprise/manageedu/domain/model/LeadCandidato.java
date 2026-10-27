@@ -15,6 +15,7 @@ public class LeadCandidato {
     private String email;
     private String telefone;
     private String origem;
+    private ClassificacaoLead classificacao;
     private Curso cursoInteresse;
 
     public LeadCandidato(
@@ -22,9 +23,10 @@ public class LeadCandidato {
             String email,
             String telefone,
             String origem,
+            ClassificacaoLead classificacao,
             Curso cursoInteresse
     ) {
-        definirDados(nome, email, telefone, origem, cursoInteresse);
+        definirDados(nome, email, telefone, origem, classificacao, cursoInteresse);
     }
 
     public void definirId(Long id) {
@@ -44,9 +46,10 @@ public class LeadCandidato {
             String email,
             String telefone,
             String origem,
+            ClassificacaoLead classificacao,
             Curso cursoInteresse
     ) {
-        definirDados(nome, email, telefone, origem, cursoInteresse);
+        definirDados(nome, email, telefone, origem, classificacao, cursoInteresse);
     }
 
     private void definirDados(
@@ -54,6 +57,7 @@ public class LeadCandidato {
             String email,
             String telefone,
             String origem,
+            ClassificacaoLead classificacao,
             Curso cursoInteresse
     ) {
         if (nome == null || nome.isBlank()) {
@@ -66,6 +70,9 @@ public class LeadCandidato {
         if (origem == null || origem.isBlank()) {
             throw new RegraDeNegocioException("A origem do lead é obrigatória.");
         }
+        if (classificacao == null) {
+            throw new RegraDeNegocioException("A classificação do lead é obrigatória.");
+        }
 
         if (cursoInteresse == null) {
             throw new RegraDeNegocioException(
@@ -77,6 +84,7 @@ public class LeadCandidato {
         this.email = email.trim();
         this.telefone = telefone.trim();
         this.origem = origem.trim();
+        this.classificacao = classificacao;
         this.cursoInteresse = cursoInteresse;
     }
 
@@ -120,6 +128,10 @@ public class LeadCandidato {
 
     public String getOrigem() {
         return origem;
+    }
+
+    public ClassificacaoLead getClassificacao() {
+        return classificacao;
     }
 
     public Curso getCursoInteresse() {

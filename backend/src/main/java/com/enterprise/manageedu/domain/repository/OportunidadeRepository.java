@@ -8,6 +8,7 @@ import java.util.Optional;
 
 public interface OportunidadeRepository {
 
+    // Contrato do domínio; a infraestrutura decide como os dados são armazenados.
     OportunidadeMatricula salvar(OportunidadeMatricula oportunidade);
 
     Optional<OportunidadeMatricula> buscarPorId(Long id);

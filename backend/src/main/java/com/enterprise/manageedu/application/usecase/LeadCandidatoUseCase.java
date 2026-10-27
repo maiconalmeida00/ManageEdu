@@ -5,6 +5,7 @@ import com.enterprise.manageedu.application.dto.LeadCandidatoResponseDTO;
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
 import com.enterprise.manageedu.domain.model.Curso;
+import com.enterprise.manageedu.domain.model.ClassificacaoLead;
 import com.enterprise.manageedu.domain.model.LeadCandidato;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
@@ -41,6 +42,7 @@ public class LeadCandidatoUseCase {
                 request.email(),
                 request.telefone(),
                 request.origem(),
+                converterClassificacao(request.classificacao()),
                 cursoInteresse
         );
         LeadCandidato salvo = leadRepository.salvar(lead);
@@ -76,6 +78,7 @@ public class LeadCandidatoUseCase {
                 request.email(),
                 request.telefone(),
                 request.origem(),
+                converterClassificacao(request.classificacao()),
                 cursoInteresse
         );
         LeadCandidato salvo = leadRepository.salvar(existente);
@@ -121,8 +124,20 @@ public class LeadCandidatoUseCase {
                 lead.getEmail(),
                 lead.getTelefone(),
                 lead.getOrigem(),
+                lead.getClassificacao().name(),
                 curso != null ? curso.getId() : null,
                 curso != null ? curso.getNome() : null
         );
+    }
+
+    private ClassificacaoLead converterClassificacao(String valor) {
+        if (valor == null || valor.isBlank()) {
+            throw new RegraDeNegocioException("A classificação do lead é obrigatória.");
+        }
+        try {
+            return ClassificacaoLead.valueOf(valor.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            throw new RegraDeNegocioException("Classificação inválida. Use FRIO, MORNO ou QUENTE.");
+        }
     }
 }

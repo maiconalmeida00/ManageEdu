@@ -100,8 +100,10 @@ public class LeadMenu {
         String telefone = sc.nextLine();
         System.out.print("Origem: ");
         String origem = sc.nextLine();
+        System.out.print("Classificação (FRIO, MORNO ou QUENTE): ");
+        String classificacao = sc.nextLine();
         Long cursoId = lerLong("ID do curso de interesse: ");
-        return new LeadCandidatoRequestDTO(nome, email, telefone, origem, cursoId);
+        return new LeadCandidatoRequestDTO(nome, email, telefone, origem, classificacao, cursoId);
     }
 
     private Long lerLong(String prompt) {
@@ -121,6 +123,7 @@ public class LeadMenu {
                         + " | Email: " + lead.email()
                         + " | Telefone: " + lead.telefone()
                         + " | Origem: " + lead.origem()
+                        + " | Classificação: " + lead.classificacao()
                         + " | Curso interesse: [" + lead.cursoInteresseId() + "] " + lead.cursoInteresseNome()
         );
     }

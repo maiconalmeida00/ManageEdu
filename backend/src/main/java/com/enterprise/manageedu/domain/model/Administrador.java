@@ -10,4 +10,9 @@ public class Administrador extends Usuario {
     public boolean podeAlterarStatus(StatusOportunidade statusAtual, StatusOportunidade novoStatus) {
         return StatusOportunidade.transicaoPermitida(statusAtual, novoStatus);
     }
+
+    @Override
+    public boolean podeReabrirOportunidade() {
+        return true;
+    }
 }

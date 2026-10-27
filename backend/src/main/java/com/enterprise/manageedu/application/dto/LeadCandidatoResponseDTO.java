@@ -6,6 +6,7 @@ public record LeadCandidatoResponseDTO(
         String email,
         String telefone,
         String origem,
+        String classificacao,
         Long cursoInteresseId,
         String cursoInteresseNome
 ) {

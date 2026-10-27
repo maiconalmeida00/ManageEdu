@@ -27,4 +27,6 @@ public abstract class Usuario {
             StatusOportunidade statusAtual,
             StatusOportunidade novoStatus
     );
+
+    public abstract boolean podeReabrirOportunidade();
 }

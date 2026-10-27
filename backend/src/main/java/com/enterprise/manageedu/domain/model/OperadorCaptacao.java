@@ -11,4 +11,9 @@ public class OperadorCaptacao extends Usuario {
         return StatusOportunidade.transicaoPermitida(statusAtual, novoStatus)
                 && novoStatus != StatusOportunidade.MATRICULA_CONFIRMADA;
     }
+
+    @Override
+    public boolean podeReabrirOportunidade() {
+        return false;
+    }
 }

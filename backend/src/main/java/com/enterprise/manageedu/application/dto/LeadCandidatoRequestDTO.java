@@ -5,6 +5,7 @@ public record LeadCandidatoRequestDTO(
         String email,
         String telefone,
         String origem,
+        String classificacao,
         Long cursoInteresseId
 ) {
 }
