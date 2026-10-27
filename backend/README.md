@@ -22,6 +22,9 @@ Equipes de captação, atendimento, secretaria acadêmica e gestores de institui
 - Criação, listagem, consulta, atualização e remoção de oportunidades de matrícula;
 - Organização das oportunidades por etapa do funil;
 - Alteração de status com validação de transições;
+- Valor estimado e data prevista nas oportunidades;
+- Classificação de lead separada da origem;
+- Reabertura controlada com justificativa e histórico em memória;
 - Perfis de acesso `Administrador` e `OperadorCaptacao`;
 - Validação de e-mail, telefone, IDs e relacionamentos entre entidades;
 - Bloqueio de exclusões que quebrariam relacionamentos existentes.
@@ -75,12 +78,18 @@ Ao iniciar, o sistema abre o menu principal com as opções:
 Fluxo sugerido para uma demonstração:
 
 1. Cadastre um curso e anote o ID exibido;
-2. Cadastre um lead usando o ID do curso de interesse;
-3. Crie uma oportunidade usando os IDs do lead e do curso;
+2. Cadastre um lead usando o ID do curso de interesse, origem e classificação;
+3. Crie uma oportunidade usando os IDs do lead e do curso, valor como `1200,50`
+   (ou `1200.50`) e data prevista no formato `dd/MM/aaaa`;
 4. Consulte o funil e avance a oportunidade pelas etapas permitidas;
-5. Use a opção de alternância para validar as permissões de cada perfil.
+5. Leve uma oportunidade a `DESISTENCIA`, alterne para administrador e use a
+   opção específica de reabertura com uma justificativa;
+6. Use a opção de alternância para validar as permissões de cada perfil.
 
-Os valores aceitos para os principais campos são exibidos pelo próprio menu. Por exemplo, os status são `NOVO_LEAD`, `CONTATO`, `DOCUMENTACAO`, `MATRICULA_CONFIRMADA` e `DESISTENCIA`.
+Os valores aceitos para os principais campos são exibidos pelo próprio menu.
+O valor estimado deve ser maior que zero, ter no máximo duas casas decimais e
+não pode usar separador de milhar. Datas inexistentes ou passadas na criação
+são rejeitadas.
 
 ## Arquitetura
 
@@ -99,7 +108,8 @@ Contém os menus interativos e a leitura de entrada do usuário:
 
 - `CursoMenu`: cadastro, listagem, busca, atualização e remoção de cursos;
 - `LeadMenu`: cadastro, listagem, busca, atualização e remoção de leads/candidatos;
-- `OportunidadeMenu`: criação, listagem, busca, atualização e alteração de status;
+- `OportunidadeMenu`: criação, listagem, busca, atualização, alteração de status
+  e reabertura;
 - `MenuPrincipal`: coordenador do menu principal, alternância de usuário e exibição do funil.
 
 ### `application`
@@ -107,8 +117,10 @@ Contém os menus interativos e a leitura de entrada do usuário:
 Responsável pelos casos de uso da aplicação:
 
 - `CursoUseCase`: operações de CRUD com validação de relacionamento;
-- `LeadCandidatoUseCase`: cadastro e validação de lead, incluindo curso de interesse;
-- `OportunidadeMatriculaUseCase`: criação, atualização, consulta, remoção e transição de status.
+- `LeadCandidatoUseCase`: cadastro e validação de lead, incluindo classificação
+  e curso de interesse;
+- `OportunidadeMatriculaUseCase`: criação, atualização, consulta, remoção,
+  transição de status e reabertura autorizada.
 
 ### `domain`
 
@@ -121,6 +133,8 @@ Contém o núcleo do sistema:
 - `Usuario`
 - `Administrador`
 - `OperadorCaptacao`
+- `ClassificacaoLead`
+- `ReaberturaOportunidade`
 - exceções de negócio e regras de transição de status
 
 ### `infrastructure`
@@ -140,7 +154,11 @@ As transições permitidas seguem o fluxo do projeto em Parte 1:
 ```text
 NOVO_LEAD -> CONTATO -> DOCUMENTACAO -> MATRICULA_CONFIRMADA
      |            |             |
-     +----------> DESISTENCIA <-+
+     +----------> DESISTENCIA
+                         |
+              reabertura (Administrador)
+                         v
+                      CONTATO
 ```
 
 Regra de negócio aplicada:
@@ -148,7 +166,8 @@ Regra de negócio aplicada:
 - `NOVO_LEAD` pode ir para `CONTATO` ou `DESISTENCIA`;
 - `CONTATO` pode ir para `DOCUMENTACAO` ou `DESISTENCIA`;
 - `DOCUMENTACAO` pode ir para `MATRICULA_CONFIRMADA` ou `DESISTENCIA`;
-- `MATRICULA_CONFIRMADA` e `DESISTENCIA` são finais.
+- `MATRICULA_CONFIRMADA` é final. `DESISTENCIA` só pode sair pela operação
+  específica de reabertura.
 
 O perfil `Administrador` pode executar qualquer transição válida. O perfil `OperadorCaptacao` pode executar transições operacionais válidas, mas não pode confirmar matrícula.
 
@@ -160,6 +179,12 @@ O perfil `Administrador` pode executar qualquer transição válida. O perfil `O
 - Bloqueio de remoção de lead com oportunidades vinculadas;
 - Bloqueio de remoção de cursos vinculados a leads ou oportunidades;
 - Proteção contra `id` nulo, zero, negativo ou redefinido após atribuição.
+- O valor estimado representa o total previsto da contratação, não
+  automaticamente a mensalidade do curso.
+- A data de criação é preservada; uma data prevista vencida pode ser mantida
+  ao atualizar outros dados.
+- Somente `Administrador` reabre uma oportunidade em `DESISTENCIA`, mudando-a
+  para `CONTATO`; a justificativa fica registrada em memória.
 
 ## Fluxo do sistema desde o início
 
@@ -194,15 +219,21 @@ Quando o usuário escolhe a opção de cursos, o `CursoMenu` coleta os dados e c
 
 ### 4. Cadastro de lead
 
-Ao cadastrar um lead, o `LeadMenu` coleta nome, e-mail, telefone, origem e curso de interesse. O `LeadCandidatoUseCase` valida os dados e confirma que o curso informado existe antes de criar o `LeadCandidato`.
+Ao cadastrar um lead, o `LeadMenu` coleta nome, e-mail, telefone, origem,
+classificação e curso de interesse. O `LeadCandidatoUseCase` valida os dados e
+confirma que o curso informado existe antes de criar o `LeadCandidato`.
 
 ### 5. Criação de oportunidade
 
-A criação de oportunidade ocorre no `OportunidadeMenu`, que solicita ID do lead e ID do curso. O `OportunidadeMatriculaUseCase` valida:
+A criação de oportunidade ocorre no `OportunidadeMenu`, que solicita ID do lead,
+ID do curso, valor estimado e data prevista. O `OportunidadeMatriculaUseCase`
+valida:
 
 - existência do lead;
 - existência do curso;
 - consistência entre o curso do lead e o curso da oportunidade.
+- valor maior que zero com até duas casas decimais;
+- data prevista existente e não anterior ao dia atual na criação.
 
 Em seguida, a oportunidade é criada com status inicial `NOVO_LEAD`.
 
@@ -216,6 +247,14 @@ A alteração de status é feita por `OportunidadeMatriculaUseCase.alterarStatus
 - atualiza o status da oportunidade.
 
 O `Supplier<Usuario>` presente no `OportunidadeMenu` garante que o menu consulte o usuário ativo no momento da operação, evitando referência desatualizada.
+
+### Reabertura
+
+A reabertura não é uma transição comum do funil. O caso de uso verifica a
+permissão polimórfica do usuário, e a entidade valida que o status atual é
+`DESISTENCIA` e que a justificativa foi informada. Cada evento registra data e
+hora, responsável, justificativa e os status de origem e destino. A coleção é
+exposta apenas como cópia imutável.
 
 ## Limitações atuais e próximos passos
 
