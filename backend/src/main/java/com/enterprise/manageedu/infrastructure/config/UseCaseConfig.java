@@ -3,38 +3,50 @@ package com.enterprise.manageedu.infrastructure.config;
 import com.enterprise.manageedu.application.usecase.CursoUseCase;
 import com.enterprise.manageedu.application.usecase.LeadCandidatoUseCase;
 import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase;
+import com.enterprise.manageedu.domain.model.Administrador;
+import com.enterprise.manageedu.domain.model.OperadorCaptacao;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
-import com.enterprise.manageedu.domain.model.Administrador;
-import com.enterprise.manageedu.domain.model.OperadorCaptacao;
-import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryCursoRepository;
-import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryLeadRepository;
-import com.enterprise.manageedu.infrastructure.persistence.memory.InMemoryOportunidadeRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
+@Configuration
 public class UseCaseConfig {
 
-    // A composição manual injeta abstrações nos casos de uso sem acoplá-los à memória.
-    private final CursoRepository cursoRepository = new InMemoryCursoRepository();
-    private final LeadRepository leadRepository = new InMemoryLeadRepository();
-    private final OportunidadeRepository oportunidadeRepository = new InMemoryOportunidadeRepository();
-
-    public CursoUseCase cursoUseCase() {
+    @Bean
+    public CursoUseCase cursoUseCase(
+            CursoRepository cursoRepository,
+            LeadRepository leadRepository,
+            OportunidadeRepository oportunidadeRepository
+    ) {
         return new CursoUseCase(cursoRepository, leadRepository, oportunidadeRepository);
     }
 
-    public LeadCandidatoUseCase leadCandidatoUseCase() {
+    @Bean
+    public LeadCandidatoUseCase leadCandidatoUseCase(
+            LeadRepository leadRepository,
+            CursoRepository cursoRepository,
+            OportunidadeRepository oportunidadeRepository
+    ) {
         return new LeadCandidatoUseCase(leadRepository, cursoRepository, oportunidadeRepository);
     }
 
-    public OportunidadeMatriculaUseCase oportunidadeMatriculaUseCase() {
+    @Bean
+    public OportunidadeMatriculaUseCase oportunidadeMatriculaUseCase(
+            OportunidadeRepository oportunidadeRepository,
+            LeadRepository leadRepository,
+            CursoRepository cursoRepository
+    ) {
         return new OportunidadeMatriculaUseCase(oportunidadeRepository, leadRepository, cursoRepository);
     }
 
+    @Bean
     public Administrador administradorPadrao() {
         return new Administrador(1L, "Ana Administradora");
     }
 
+    @Bean
     public OperadorCaptacao operadorPadrao() {
         return new OperadorCaptacao(2L, "Carlos Captacao");
     }

@@ -1,309 +1,193 @@
 # ManageEdu — Backend
 
 ![Java](https://img.shields.io/badge/Java-21-orange)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.16-brightgreen)
+![MySQL](https://img.shields.io/badge/MySQL-8.0-blue)
 ![Maven](https://img.shields.io/badge/Maven-Wrapper-C71A36)
 
-Backend de um CRM educacional para gerenciar cursos, leads/candidatos e oportunidades de matrícula por meio de uma interface de terminal (CLI).
-
-> **Status:** protótipo acadêmico funcional. Os dados são mantidos em memória e são perdidos quando a aplicação é encerrada.
+Backend do CRM educacional ManageEdu para gerenciamento de cursos, leads/candidatos e oportunidades de matrícula, implementado como uma **API REST com Spring Boot** e **persistência relacional em banco de dados MySQL**.
 
 ## Visão geral
 
-O ManageEdu organiza a captação de interessados e acompanha oportunidades de matrícula em instituições de ensino. A aplicação permite que equipes de captação, atendimento e secretaria acadêmica controlem cursos, leads e o funil de vendas em um ambiente simples e operacional.
-
-## Público-alvo
-
-Equipes de captação, atendimento, secretaria acadêmica e gestores de instituições de ensino que precisam controlar interessados, cursos e oportunidades de matrícula.
+O ManageEdu organiza a captação de interessados e acompanha oportunidades de matrícula em instituições de ensino. A aplicação permite que equipes de captação, atendimento e secretaria acadêmica controlem cursos, leads e o funil de vendas por meio de endpoints HTTP simples, funcionais e consistentes.
 
 ## Funcionalidades
 
-- Cadastro, listagem, consulta, atualização e remoção de cursos;
-- Cadastro, listagem, consulta, atualização e remoção de leads/candidatos;
-- Criação, listagem, consulta, atualização e remoção de oportunidades de matrícula;
-- Organização das oportunidades por etapa do funil;
-- Alteração de status com validação de transições;
-- Valor estimado e data prevista nas oportunidades;
-- Classificação de lead separada da origem;
-- Reabertura controlada com justificativa e histórico em memória;
-- Perfis de acesso `Administrador` e `OperadorCaptacao`;
-- Validação de e-mail, telefone, IDs e relacionamentos entre entidades;
-- Bloqueio de exclusões que quebrariam relacionamentos existentes.
+- **Cursos**: Cadastro, listagem, consulta por ID, atualização e remoção de cursos (com proteção de exclusão para cursos vinculados a leads ou oportunidades);
+- **Leads/Candidatos**: Cadastro, listagem, consulta por ID, atualização e remoção de leads (com validação estrita de e-mail, telefone de 10 a 11 dígitos, classificação `FRIO`, `MORNO` ou `QUENTE` e curso de interesse obrigatório);
+- **Oportunidades de Matrícula**: Criação, listagem geral, filtro por status, visão completa do funil de matrícula por etapa, atualização de dados cadastrais, alteração orientada de status e reabertura;
+- **Funil de Matrícula e Validação de Transições**:
+  ```text
+  NOVO_LEAD -> CONTATO -> DOCUMENTACAO -> MATRICULA_CONFIRMADA
+       |            |             |
+       +----------> DESISTENCIA <-+
+                           |
+                reabertura (Administrador)
+                           v
+                        CONTATO
+  ```
+- **Controle de Acesso por Perfil (`Administrador` e `OperadorCaptacao`)**:
+  - `OperadorCaptacao`: não pode aprovar diretamente para `MATRICULA_CONFIRMADA` nem reabrir oportunidades em `DESISTENCIA`.
+  - `Administrador`: permissão total de avanço no funil e realização de reaberturas com justificativa obrigatória e registro de auditoria.
+- **Persistência Relacional em MySQL**: Tabelas relacionais `cursos`, `leads`, `oportunidades` e `reaberturas_oportunidade`.
 
 ## Tecnologias
 
-- Java 21
-- Maven
-- Interface de terminal/CLI
-- Repositórios em memória
+- **Java 21**
+- **Spring Boot 3** (Spring Web, Spring Data JPA, Spring Security, Spring Validation)
+- **MySQL 8** (Hibernate / JPA com schema gerenciado via DDL auto)
+- **Springdoc OpenAPI / Swagger UI**
+- **Maven Wrapper**
 
 ## Pré-requisitos
 
 - JDK 21 ou superior;
-- PowerShell, Prompt de Comando ou outro terminal compatível;
-- Nenhuma instalação global do Maven é necessária: o projeto inclui o Maven Wrapper.
+- Servidor MySQL 8 em execução;
+- Porta 8080 liberada para a API.
+
+## Configuração do Banco de Dados
+
+A aplicação conecta-se ao banco de dados MySQL utilizando as variáveis de ambiente ou os valores padrão definidos em `src/main/resources/application.properties`:
+
+- `DB_URL`: URL JDBC do MySQL (padrão: `jdbc:mysql://localhost:3306/manageedu?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true`)
+- `DB_USERNAME`: Usuário do banco (padrão: `root`)
+- `DB_PASSWORD`: Senha do banco (padrão: `123456789`)
+
+Caso o banco `manageedu` ainda não exista, ele será criado automaticamente na primeira execução com suporte a `createDatabaseIfNotExist=true`.
 
 ## Como executar
 
 Abra um terminal no diretório `backend`:
 
-### Windows
+### Compilar e rodar com o Maven Wrapper:
 
 ```powershell
-.\mvnw.cmd clean compile
-java -cp target\classes com.enterprise.manageedu.ManageEduApplication
+.\mvnw.cmd spring-boot:run
 ```
 
-### Linux/macOS
+Ou empacotando e executando o JAR:
 
-```bash
-./mvnw clean compile
-java -cp target/classes com.enterprise.manageedu.ManageEduApplication
+```powershell
+.\mvnw.cmd clean package -DskipTests
+java -jar target/ManageEdu-0.0.1-SNAPSHOT.jar
 ```
 
-O comando `compile` gera as classes em `target`. Depois da compilação, a aplicação pode ser iniciada diretamente pelo comando `java` mostrado acima.
+A API estará disponível em `http://localhost:8080`.
+A documentação interativa Swagger UI estará acessível em `http://localhost:8080/swagger-ui.html`.
 
-## Como usar
+---
 
-Ao iniciar, o sistema abre o menu principal com as opções:
+## Endpoints da API
+
+### 1. Cursos (`/api/cursos`)
+
+| Método | Endpoint | Descrição | Status de Sucesso |
+|---|---|---|---|
+| `POST` | `/api/cursos` | Cadastrar novo curso | `201 Created` |
+| `GET` | `/api/cursos` | Listar todos os cursos | `200 OK` |
+| `GET` | `/api/cursos/{id}` | Buscar curso por ID | `200 OK` |
+| `PUT` | `/api/cursos/{id}` | Atualizar dados do curso | `200 OK` |
+| `DELETE` | `/api/cursos/{id}` | Excluir curso (bloqueado se houver vínculo) | `204 No Content` |
+
+#### Exemplo de requisição (POST /api/cursos):
+```json
+{
+  "nome": "Engenharia de Software",
+  "modalidade": "PRESENCIAL",
+  "turno": "NOTURNO"
+}
+```
+*Modalidades aceitas:* `PRESENCIAL`, `EAD`, `SEMIPRESENCIAL`.  
+*Turnos aceitos:* `MATUTINO`, `VESPERTINO`, `NOTURNO`, `INTEGRAL`.
+
+---
+
+### 2. Leads / Candidatos (`/api/leads`)
+
+| Método | Endpoint | Descrição | Status de Sucesso |
+|---|---|---|---|
+| `POST` | `/api/leads` | Cadastrar lead | `201 Created` |
+| `GET` | `/api/leads` | Listar todos os leads | `200 OK` |
+| `GET` | `/api/leads/{id}` | Buscar lead por ID | `200 OK` |
+| `PUT` | `/api/leads/{id}` | Atualizar lead | `200 OK` |
+| `DELETE` | `/api/leads/{id}` | Excluir lead (bloqueado se houver oportunidades) | `204 No Content` |
+
+#### Exemplo de requisição (POST /api/leads):
+```json
+{
+  "nome": "Lucas Silva",
+  "email": "lucas@email.com",
+  "telefone": "11987654321",
+  "origem": "Instagram",
+  "classificacao": "QUENTE",
+  "cursoInteresseId": 1
+}
+```
+*Classificações aceitas:* `FRIO`, `MORNO`, `QUENTE`.
+
+---
+
+### 3. Oportunidades de Matrícula (`/api/oportunidades`)
+
+| Método | Endpoint | Descrição | Status de Sucesso |
+|---|---|---|---|
+| `POST` | `/api/oportunidades` | Criar oportunidade (status inicial `NOVO_LEAD`) | `201 Created` |
+| `GET` | `/api/oportunidades` | Listar oportunidades (parâmetro opcional `?status=...`) | `200 OK` |
+| `GET` | `/api/oportunidades/funil` | Obter visão agrupada do funil de vendas por status | `200 OK` |
+| `GET` | `/api/oportunidades/{id}` | Buscar oportunidade por ID | `200 OK` |
+| `PUT` | `/api/oportunidades/{id}` | Atualizar dados cadastrais da oportunidade | `200 OK` |
+| `PATCH` ou `PUT` | `/api/oportunidades/{id}/status` | Alterar etapa/status no funil | `200 OK` |
+| `POST` | `/api/oportunidades/{id}/reabrir` | Reabrir oportunidade em desistência | `200 OK` |
+| `DELETE` | `/api/oportunidades/{id}` | Excluir oportunidade | `204 No Content` |
+
+#### Exemplo de criação de oportunidade (`POST /api/oportunidades`):
+```json
+{
+  "leadCandidatoId": 1,
+  "cursoId": 1,
+  "valorEstimado": 1200.50,
+  "dataPrevista": "2026-12-15",
+  "observacao": "Interesse no turno noturno"
+}
+```
+
+#### Alteração de status (`PATCH /api/oportunidades/{id}/status`):
+Header opcional: `X-User-Role: ADMIN` (padrão) ou `X-User-Role: OPERADOR`.
+```json
+{
+  "novoStatus": "CONTATO"
+}
+```
+
+#### Reabertura de oportunidade (`POST /api/oportunidades/{id}/reabrir`):
+Header opcional: `X-User-Role: ADMIN` (apenas Administradores podem reabrir).
+```json
+{
+  "justificativa": "Candidato retomou o contato após resolução financeira."
+}
+```
+
+---
+
+## Arquitetura do Sistema
+
+A arquitetura hexagonal / limpa foi integralmente preservada:
 
 ```text
-1. Gerenciar cursos
-2. Gerenciar leads/candidatos
-3. Gerenciar oportunidades de matrícula
-4. Exibir funil de matrícula por status
-5. Alternar usuário ativo
-0. Sair
-```
-
-Fluxo sugerido para uma demonstração:
-
-1. Cadastre um curso e anote o ID exibido;
-2. Cadastre um lead usando o ID do curso de interesse, origem e classificação;
-3. Crie uma oportunidade usando os IDs do lead e do curso, valor como `1200,50`
-   (ou `1200.50`) e data prevista no formato `dd/MM/aaaa`;
-4. Consulte o funil e avance a oportunidade pelas etapas permitidas;
-5. Leve uma oportunidade a `DESISTENCIA`, alterne para administrador e use a
-   opção específica de reabertura com uma justificativa;
-6. Use a opção de alternância para validar as permissões de cada perfil.
-
-Os valores aceitos para os principais campos são exibidos pelo próprio menu.
-O valor estimado deve ser maior que zero, ter no máximo duas casas decimais e
-não pode usar separador de milhar. Datas inexistentes ou passadas na criação
-são rejeitadas.
-
-## Arquitetura
-
-O projeto é organizado em camadas, com a lógica central de negócio separada da interface de usuário:
-
-```text
-adapters/cli       -> interação com o usuário via terminal
-application/       -> casos de uso e DTOs
-infrastructure/    -> composição manual e persistência em memória
-domain/            -> entidades, regras de negócio e enumerações
-```
-
-### `adapters/cli`
-
-Contém os menus interativos e a leitura de entrada do usuário:
-
-- `CursoMenu`: cadastro, listagem, busca, atualização e remoção de cursos;
-- `LeadMenu`: cadastro, listagem, busca, atualização e remoção de leads/candidatos;
-- `OportunidadeMenu`: criação, listagem, busca, atualização, alteração de status
-  e reabertura;
-- `MenuPrincipal`: coordenador do menu principal, alternância de usuário e exibição do funil.
-
-### `application`
-
-Responsável pelos casos de uso da aplicação:
-
-- `CursoUseCase`: operações de CRUD com validação de relacionamento;
-- `LeadCandidatoUseCase`: cadastro e validação de lead, incluindo classificação
-  e curso de interesse;
-- `OportunidadeMatriculaUseCase`: criação, atualização, consulta, remoção,
-  transição de status e reabertura autorizada.
-
-### `domain`
-
-Contém o núcleo do sistema:
-
-- `Curso`
-- `LeadCandidato`
-- `OportunidadeMatricula`
-- `StatusOportunidade`
-- `Usuario`
-- `Administrador`
-- `OperadorCaptacao`
-- `ClassificacaoLead`
-- `ReaberturaOportunidade`
-- exceções de negócio e regras de transição de status
-
-### `infrastructure`
-
-A composição manual das dependências é feita pela classe `UseCaseConfig`, que conecta os repositórios em memória aos casos de uso:
-
-- `InMemoryCursoRepository`;
-- `InMemoryLeadRepository`;
-- `InMemoryOportunidadeRepository`.
-
-Os dados são mantidos apenas em memória durante a execução da aplicação.
-
-## Funil de matrícula
-
-As transições permitidas seguem o fluxo do projeto em Parte 1:
-
-```text
-NOVO_LEAD -> CONTATO -> DOCUMENTACAO -> MATRICULA_CONFIRMADA
-     |            |             |
-     +----------> DESISTENCIA
-                         |
-              reabertura (Administrador)
-                         v
-                      CONTATO
-```
-
-Regra de negócio aplicada:
-
-- `NOVO_LEAD` pode ir para `CONTATO` ou `DESISTENCIA`;
-- `CONTATO` pode ir para `DOCUMENTACAO` ou `DESISTENCIA`;
-- `DOCUMENTACAO` pode ir para `MATRICULA_CONFIRMADA` ou `DESISTENCIA`;
-- `MATRICULA_CONFIRMADA` é final. `DESISTENCIA` só pode sair pela operação
-  específica de reabertura.
-
-O perfil `Administrador` pode executar qualquer transição válida. O perfil `OperadorCaptacao` pode executar transições operacionais válidas, mas não pode confirmar matrícula.
-
-## Regras de negócio atuais
-
-- Validação de e-mail com padrão básico e rejeição de entradas inválidas;
-- Validação de telefone com remoção de caracteres não numéricos e exigência de 10 ou 11 dígitos;
-- Consistência entre o curso de interesse do lead e o curso da oportunidade;
-- Bloqueio de remoção de lead com oportunidades vinculadas;
-- Bloqueio de remoção de cursos vinculados a leads ou oportunidades;
-- Proteção contra `id` nulo, zero, negativo ou redefinido após atribuição.
-- O valor estimado representa o total previsto da contratação, não
-  automaticamente a mensalidade do curso.
-- A data de criação é preservada; uma data prevista vencida pode ser mantida
-  ao atualizar outros dados.
-- Somente `Administrador` reabre uma oportunidade em `DESISTENCIA`, mudando-a
-  para `CONTATO`; a justificativa fica registrada em memória.
-
-## Fluxo do sistema desde o início
-
-### 1. Inicialização
-
-A aplicação começa na classe `ManageEduApplication`, que monta a configuração manual dos casos de uso e instância o `CliRunner`:
-
-1. `UseCaseConfig` cria os repositórios em memória;
-2. `UseCaseConfig` cria os casos de uso;
-3. `UseCaseConfig` define os usuários padrão:
-   - `Administrador` com ID 1;
-   - `OperadorCaptacao` com ID 2;
-4. `ManageEduApplication` inicia o runner da CLI.
-
-### 2. Interação com o menu
-
-O `CliRunner` inicia o `MenuPrincipal`, que permanece em um loop até o usuário sair. A partir daí, as opções levam para os menus específicos:
-
-```text
-MenuPrincipal
-  ├─ 1 -> CursoMenu
-  ├─ 2 -> LeadMenu
-  ├─ 3 -> OportunidadeMenu
-  ├─ 4 -> Funil de matrícula
-  ├─ 5 -> Alternar usuário ativo
-  └─ 0 -> Encerrar aplicação
-```
-
-### 3. Cadastro de curso
-
-Quando o usuário escolhe a opção de cursos, o `CursoMenu` coleta os dados e chama `CursoUseCase.cadastrar`. O caso de uso valida nome, modalidade e turno e salva o objeto `Curso` no repositório em memória.
-
-### 4. Cadastro de lead
-
-Ao cadastrar um lead, o `LeadMenu` coleta nome, e-mail, telefone, origem,
-classificação e curso de interesse. O `LeadCandidatoUseCase` valida os dados e
-confirma que o curso informado existe antes de criar o `LeadCandidato`.
-
-### 5. Criação de oportunidade
-
-A criação de oportunidade ocorre no `OportunidadeMenu`, que solicita ID do lead,
-ID do curso, valor estimado e data prevista. O `OportunidadeMatriculaUseCase`
-valida:
-
-- existência do lead;
-- existência do curso;
-- consistência entre o curso do lead e o curso da oportunidade.
-- valor maior que zero com até duas casas decimais;
-- data prevista existente e não anterior ao dia atual na criação.
-
-Em seguida, a oportunidade é criada com status inicial `NOVO_LEAD`.
-
-### 6. Alteração de status
-
-A alteração de status é feita por `OportunidadeMatriculaUseCase.alterarStatus`, que:
-
-- valida o ID da oportunidade;
-- valida a transição usando `StatusOportunidade`;
-- valida a permissão do usuário ativo;
-- atualiza o status da oportunidade.
-
-O `Supplier<Usuario>` presente no `OportunidadeMenu` garante que o menu consulte o usuário ativo no momento da operação, evitando referência desatualizada.
-
-### Reabertura
-
-A reabertura não é uma transição comum do funil. O caso de uso verifica a
-permissão polimórfica do usuário, e a entidade valida que o status atual é
-`DESISTENCIA` e que a justificativa foi informada. Cada evento registra data e
-hora, responsável, justificativa e os status de origem e destino. A coleção é
-exposta apenas como cópia imutável.
-
-## Limitações atuais e próximos passos
-
-O protótipo ainda não possui persistência definitiva, API HTTP, autenticação real ou interface web. A CLI atual serve como interface temporária para validar as regras de negócio antes da evolução do sistema.
-
-### Evolução para uma API consumida pelo frontend
-
-Em uma etapa futura, o backend será transformado em uma API REST para disponibilizar as funcionalidades do ManageEdu ao frontend que será desenvolvido posteriormente. A intenção é preservar o domínio e os casos de uso existentes, substituindo gradualmente a interface de terminal por endpoints HTTP.
-
-Essa evolução deverá contemplar:
-
-- Integração com Spring Boot ou tecnologia equivalente;
-- Endpoints REST para cursos, leads/candidatos e oportunidades de matrícula;
-- DTOs de requisição e resposta para comunicação com o frontend;
-- Persistência dos dados em banco de dados;
-- Autenticação e autorização por perfil de usuário;
-- Validação e padronização das respostas de erro;
-- Documentação dos endpoints, preferencialmente com OpenAPI/Swagger;
-- Configuração de CORS para permitir a comunicação segura com o frontend;
-- Manutenção das regras do funil e das validações no domínio, evitando duplicação de lógica na interface.
-
-O frontend futuro consumirá essa API para realizar cadastros, consultas, atualizações, exclusões e acompanhamento visual do funil de matrícula. A separação entre `domain`, `application` e `infrastructure` foi mantida para facilitar essa migração e permitir que a nova camada HTTP reutilize os casos de uso atuais.
-
-### Roadmap
-
-- Persistência em banco de dados;
-- Transformação do backend em uma API REST para o frontend;
-- Migração ou integração com Spring Boot;
-- Login e autorização persistidos;
-- Desenvolvimento do frontend web consumidor da API;
-- Upload de documentos e fotos;
-- Logs em arquivo.
-
-## Estrutura do projeto
-
-```text
-backend/
-├── pom.xml
-├── mvnw / mvnw.cmd
-└── src/main/java/com/enterprise/manageedu/
-    ├── adapters/cli/
-    ├── application/
-    │   ├── dto/
-    │   └── usecase/
-    ├── domain/
-    │   ├── exception/
-    │   ├── model/
-    │   └── repository/
-    └── infrastructure/
-        ├── config/
-        └── persistence/memory/
+src/main/java/com/enterprise/manageedu/
+├── ManageEduApplication.java                 -> Ponto de entrada Spring Boot
+├── domain/                                    -> Núcleo de domínio (regras puras)
+│   ├── exception/                            -> RegraDeNegocioException, ResourceNotFoundException
+│   ├── model/                                -> Curso, LeadCandidato, OportunidadeMatricula, Usuario...
+│   └── repository/                           -> Interfaces de contrato dos repositórios
+├── application/                               -> Casos de uso e contratos de transporte
+│   ├── dto/                                  -> Request e Response DTOs
+│   └── usecase/                              -> CursoUseCase, LeadCandidatoUseCase, OportunidadeMatriculaUseCase
+├── infrastructure/                            -> Implementações técnicas e persistência real
+│   ├── config/                               -> UseCaseConfig (@Configuration), SecurityConfig
+│   └── persistence/                          -> Repositórios Spring Data JPA e implementações de persistência
+│       ├── entity/                           -> Entidades JPA relacionais para o MySQL
+│       └── repository/                       -> Interfaces Spring Data JPA
+└── adapters/
+    └── rest/                                 -> Controladores REST (endpoints da API) e Exception Handler
 ```

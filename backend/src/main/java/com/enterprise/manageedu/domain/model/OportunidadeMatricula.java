@@ -21,6 +21,35 @@ public class OportunidadeMatricula {
     private String observacao;
     private final List<ReaberturaOportunidade> reaberturas = new ArrayList<>();
 
+    private OportunidadeMatricula() {
+    }
+
+    public static OportunidadeMatricula restaurar(
+            Long id,
+            LeadCandidato leadCandidato,
+            Curso curso,
+            StatusOportunidade status,
+            LocalDateTime dataCriacao,
+            BigDecimal valorEstimado,
+            LocalDate dataPrevista,
+            String observacao,
+            List<ReaberturaOportunidade> reaberturas
+    ) {
+        OportunidadeMatricula oportunidade = new OportunidadeMatricula();
+        oportunidade.id = id;
+        oportunidade.leadCandidato = leadCandidato;
+        oportunidade.curso = curso;
+        oportunidade.status = status;
+        oportunidade.dataCriacao = dataCriacao;
+        oportunidade.valorEstimado = valorEstimado;
+        oportunidade.dataPrevista = dataPrevista;
+        oportunidade.observacao = observacao;
+        if (reaberturas != null) {
+            oportunidade.reaberturas.addAll(reaberturas);
+        }
+        return oportunidade;
+    }
+
     public OportunidadeMatricula(
             LeadCandidato leadCandidato,
             Curso curso,
