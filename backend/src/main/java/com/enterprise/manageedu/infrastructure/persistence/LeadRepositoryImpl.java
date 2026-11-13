@@ -92,6 +92,12 @@ public class LeadRepositoryImpl implements LeadRepository {
         springDataLeadRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorCursoId(Long cursoId) {
+        return springDataLeadRepository.existsByCursoInteresseId(cursoId);
+    }
+
     public LeadCandidato toDomain(LeadJpaEntity entity) {
         if (entity == null) {
             return null;

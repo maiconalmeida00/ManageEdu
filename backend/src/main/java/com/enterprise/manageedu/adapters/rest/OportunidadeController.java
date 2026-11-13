@@ -5,12 +5,13 @@ import com.enterprise.manageedu.application.dto.OportunidadeMatriculaRequestDTO;
 import com.enterprise.manageedu.application.dto.OportunidadeMatriculaResponseDTO;
 import com.enterprise.manageedu.application.dto.ReaberturaOportunidadeRequestDTO;
 import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase;
-import com.enterprise.manageedu.domain.model.Administrador;
-import com.enterprise.manageedu.domain.model.OperadorCaptacao;
+import com.enterprise.manageedu.application.usecase.UsuarioUseCase;
 import com.enterprise.manageedu.domain.model.StatusOportunidade;
 import com.enterprise.manageedu.domain.model.Usuario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -29,27 +29,31 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/oportunidades")
-@CrossOrigin(origins = "*")
 public class OportunidadeController {
 
+    private static final Logger log = LoggerFactory.getLogger(OportunidadeController.class);
+
     private final OportunidadeMatriculaUseCase oportunidadeUseCase;
-    private final Administrador administradorPadrao;
-    private final OperadorCaptacao operadorPadrao;
+    private final UsuarioUseCase usuarioUseCase;
 
     public OportunidadeController(
             OportunidadeMatriculaUseCase oportunidadeUseCase,
-            Administrador administradorPadrao,
-            OperadorCaptacao operadorPadrao
+            UsuarioUseCase usuarioUseCase
     ) {
         this.oportunidadeUseCase = oportunidadeUseCase;
-        this.administradorPadrao = administradorPadrao;
-        this.operadorPadrao = operadorPadrao;
+        this.usuarioUseCase = usuarioUseCase;
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public OportunidadeMatriculaResponseDTO criar(@RequestBody OportunidadeMatriculaRequestDTO request) {
-        return oportunidadeUseCase.criar(request);
+    public OportunidadeMatriculaResponseDTO criar(
+            @RequestBody OportunidadeMatriculaRequestDTO request,
+            Authentication authentication
+    ) {
+        OportunidadeMatriculaResponseDTO criada = oportunidadeUseCase.criar(request);
+        log.info("Ação=CADASTRO_OPORTUNIDADE | Responsavel={} | OportunidadeId={}",
+                obterEmailResponsavel(authentication), criada.id());
+        return criada;
     }
 
     @GetMapping
@@ -75,53 +79,64 @@ public class OportunidadeController {
     @PutMapping("/{id}")
     public OportunidadeMatriculaResponseDTO atualizarDados(
             @PathVariable Long id,
-            @RequestBody OportunidadeMatriculaRequestDTO request
+            @RequestBody OportunidadeMatriculaRequestDTO request,
+            Authentication authentication
     ) {
-        return oportunidadeUseCase.atualizarDados(id, request);
+        OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.atualizarDados(id, request);
+        log.info("Ação=ATUALIZACAO_OPORTUNIDADE | Responsavel={} | OportunidadeId={}",
+                obterEmailResponsavel(authentication), atualizada.id());
+        return atualizada;
     }
 
     @PatchMapping("/{id}/status")
     public OportunidadeMatriculaResponseDTO alterarStatusPatch(
             @PathVariable Long id,
             @RequestBody AtualizarStatusOportunidadeDTO request,
-            @RequestHeader(value = "X-User-Role", defaultValue = "ADMIN") String userRole
+            Authentication authentication
     ) {
-        Usuario usuario = obterUsuarioPorRole(userRole);
-        return oportunidadeUseCase.alterarStatus(id, request, usuario);
+        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(obterEmailResponsavel(authentication));
+        OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.alterarStatus(id, request, usuario);
+        log.info("Ação=MUDANCA_STATUS_OPORTUNIDADE | Responsavel={} | OportunidadeId={} | NovoStatus={}",
+                usuario.getEmail(), atualizada.id(), atualizada.status());
+        return atualizada;
     }
 
     @PutMapping("/{id}/status")
     public OportunidadeMatriculaResponseDTO alterarStatusPut(
             @PathVariable Long id,
             @RequestBody AtualizarStatusOportunidadeDTO request,
-            @RequestHeader(value = "X-User-Role", defaultValue = "ADMIN") String userRole
+            Authentication authentication
     ) {
-        Usuario usuario = obterUsuarioPorRole(userRole);
-        return oportunidadeUseCase.alterarStatus(id, request, usuario);
+        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(obterEmailResponsavel(authentication));
+        OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.alterarStatus(id, request, usuario);
+        log.info("Ação=MUDANCA_STATUS_OPORTUNIDADE | Responsavel={} | OportunidadeId={} | NovoStatus={}",
+                usuario.getEmail(), atualizada.id(), atualizada.status());
+        return atualizada;
     }
 
     @PostMapping("/{id}/reabrir")
     public OportunidadeMatriculaResponseDTO reabrir(
             @PathVariable Long id,
             @RequestBody ReaberturaOportunidadeRequestDTO request,
-            @RequestHeader(value = "X-User-Role", defaultValue = "ADMIN") String userRole
+            Authentication authentication
     ) {
-        Usuario usuario = obterUsuarioPorRole(userRole);
+        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(obterEmailResponsavel(authentication));
         String justificativa = request != null ? request.justificativa() : null;
-        return oportunidadeUseCase.reabrirOportunidade(id, justificativa, usuario);
+        OportunidadeMatriculaResponseDTO reaberta = oportunidadeUseCase.reabrirOportunidade(id, justificativa, usuario);
+        log.info("Ação=REABERTURA_OPORTUNIDADE | Responsavel={} | OportunidadeId={}",
+                usuario.getEmail(), reaberta.id());
+        return reaberta;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remover(@PathVariable Long id) {
+    public void remover(@PathVariable Long id, Authentication authentication) {
         oportunidadeUseCase.remover(id);
+        log.info("Ação=REMOCAO_OPORTUNIDADE | Responsavel={} | OportunidadeId={}",
+                obterEmailResponsavel(authentication), id);
     }
 
-    private Usuario obterUsuarioPorRole(String role) {
-        if (role != null && role.trim().equalsIgnoreCase("OPERADOR")) {
-            return operadorPadrao;
-        }
-        return administradorPadrao;
+    private String obterEmailResponsavel(Authentication authentication) {
+        return authentication != null ? authentication.getName() : null;
     }
 }
-

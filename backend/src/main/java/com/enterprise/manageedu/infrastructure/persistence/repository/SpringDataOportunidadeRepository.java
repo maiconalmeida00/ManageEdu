@@ -11,5 +11,9 @@ import java.util.List;
 public interface SpringDataOportunidadeRepository extends JpaRepository<OportunidadeJpaEntity, Long> {
 
     List<OportunidadeJpaEntity> findByStatus(StatusOportunidade status);
+
+    boolean existsByCursoId(Long cursoId);
+
+    boolean existsByLeadCandidatoId(Long leadId);
 }
 

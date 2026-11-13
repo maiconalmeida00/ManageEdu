@@ -6,5 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface SpringDataLeadRepository extends JpaRepository<LeadJpaEntity, Long> {
+
+    boolean existsByCursoInteresseId(Long cursoId);
 }
 

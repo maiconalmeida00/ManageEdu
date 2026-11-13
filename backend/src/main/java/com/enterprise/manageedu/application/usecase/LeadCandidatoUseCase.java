@@ -90,10 +90,7 @@ public class LeadCandidatoUseCase {
         LeadCandidato lead = leadRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
 
-        boolean possuiOportunidade = oportunidadeRepository.listarTodos().stream()
-                .anyMatch(oportunidade -> oportunidade.getLeadCandidato() != null
-                        && oportunidade.getLeadCandidato().getId() != null
-                        && oportunidade.getLeadCandidato().getId().equals(lead.getId()));
+        boolean possuiOportunidade = oportunidadeRepository.existePorLeadId(lead.getId());
 
         if (possuiOportunidade) {
             throw new RegraDeNegocioException("Não é possível excluir o lead porque existem oportunidades vinculadas.");

@@ -14,4 +14,6 @@ public interface LeadRepository {
     List<LeadCandidato> listarTodos();
 
     void remover(Long id);
+
+    boolean existePorCursoId(Long cursoId);
 }

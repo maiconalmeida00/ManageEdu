@@ -1,15 +1,19 @@
 package com.enterprise.manageedu.infrastructure.config;
 
+import com.enterprise.manageedu.application.usecase.AnexoUseCase;
 import com.enterprise.manageedu.application.usecase.CursoUseCase;
 import com.enterprise.manageedu.application.usecase.LeadCandidatoUseCase;
 import com.enterprise.manageedu.application.usecase.OportunidadeMatriculaUseCase;
-import com.enterprise.manageedu.domain.model.Administrador;
-import com.enterprise.manageedu.domain.model.OperadorCaptacao;
+import com.enterprise.manageedu.application.usecase.UsuarioUseCase;
+import com.enterprise.manageedu.domain.repository.AnexoRepository;
 import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
+import com.enterprise.manageedu.domain.repository.UsuarioRepository;
+import com.enterprise.manageedu.infrastructure.storage.ArmazenamentoLocalArquivo;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class UseCaseConfig {
@@ -42,12 +46,25 @@ public class UseCaseConfig {
     }
 
     @Bean
-    public Administrador administradorPadrao() {
-        return new Administrador(1L, "Ana Administradora");
+    public UsuarioUseCase usuarioUseCase(
+            UsuarioRepository usuarioRepository,
+            PasswordEncoder passwordEncoder
+    ) {
+        return new UsuarioUseCase(usuarioRepository, passwordEncoder);
     }
 
     @Bean
-    public OperadorCaptacao operadorPadrao() {
-        return new OperadorCaptacao(2L, "Carlos Captacao");
+    public AnexoUseCase anexoUseCase(
+            AnexoRepository anexoRepository,
+            LeadRepository leadRepository,
+            OportunidadeRepository oportunidadeRepository,
+            ArmazenamentoLocalArquivo armazenamentoLocalArquivo
+    ) {
+        return new AnexoUseCase(
+                anexoRepository,
+                leadRepository,
+                oportunidadeRepository,
+                armazenamentoLocalArquivo
+        );
     }
 }

@@ -18,4 +18,8 @@ public interface OportunidadeRepository {
     List<OportunidadeMatricula> listarPorStatus(StatusOportunidade status);
 
     void remover(Long id);
+
+    boolean existePorCursoId(Long cursoId);
+
+    boolean existePorLeadId(Long leadId);
 }

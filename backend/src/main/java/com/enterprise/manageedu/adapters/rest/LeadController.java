@@ -3,8 +3,10 @@ package com.enterprise.manageedu.adapters.rest;
 import com.enterprise.manageedu.application.dto.LeadCandidatoRequestDTO;
 import com.enterprise.manageedu.application.dto.LeadCandidatoResponseDTO;
 import com.enterprise.manageedu.application.usecase.LeadCandidatoUseCase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,8 +21,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/leads")
-@CrossOrigin(origins = "*")
 public class LeadController {
+
+    private static final Logger log = LoggerFactory.getLogger(LeadController.class);
 
     private final LeadCandidatoUseCase leadCandidatoUseCase;
 
@@ -30,8 +33,13 @@ public class LeadController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public LeadCandidatoResponseDTO cadastrar(@RequestBody LeadCandidatoRequestDTO request) {
-        return leadCandidatoUseCase.cadastrar(request);
+    public LeadCandidatoResponseDTO cadastrar(
+            @RequestBody LeadCandidatoRequestDTO request,
+            Authentication authentication
+    ) {
+        LeadCandidatoResponseDTO salvo = leadCandidatoUseCase.cadastrar(request);
+        log.info("Ação=CADASTRO_LEAD | Responsavel={} | LeadId={}", obterResponsavel(authentication), salvo.id());
+        return salvo;
     }
 
     @GetMapping
@@ -45,14 +53,24 @@ public class LeadController {
     }
 
     @PutMapping("/{id}")
-    public LeadCandidatoResponseDTO atualizar(@PathVariable Long id, @RequestBody LeadCandidatoRequestDTO request) {
-        return leadCandidatoUseCase.atualizar(id, request);
+    public LeadCandidatoResponseDTO atualizar(
+            @PathVariable Long id,
+            @RequestBody LeadCandidatoRequestDTO request,
+            Authentication authentication
+    ) {
+        LeadCandidatoResponseDTO atualizado = leadCandidatoUseCase.atualizar(id, request);
+        log.info("Ação=ATUALIZACAO_LEAD | Responsavel={} | LeadId={}", obterResponsavel(authentication), atualizado.id());
+        return atualizado;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void remover(@PathVariable Long id) {
+    public void remover(@PathVariable Long id, Authentication authentication) {
         leadCandidatoUseCase.remover(id);
+        log.info("Ação=REMOCAO_LEAD | Responsavel={} | LeadId={}", obterResponsavel(authentication), id);
+    }
+
+    private String obterResponsavel(Authentication authentication) {
+        return authentication != null ? authentication.getName() : "desconhecido";
     }
 }
-

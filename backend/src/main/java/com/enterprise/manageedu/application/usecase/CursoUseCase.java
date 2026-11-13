@@ -80,15 +80,8 @@ public class CursoUseCase {
         Curso curso = cursoRepository.buscarPorId(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
 
-        boolean vinculadoLead = leadRepository.listarTodos().stream()
-                .anyMatch(lead -> lead.getCursoInteresse() != null
-                        && lead.getCursoInteresse().getId() != null
-                        && lead.getCursoInteresse().getId().equals(curso.getId()));
-
-        boolean vinculadoOportunidade = oportunidadeRepository.listarTodos().stream()
-                .anyMatch(oportunidade -> oportunidade.getCurso() != null
-                        && oportunidade.getCurso().getId() != null
-                        && oportunidade.getCurso().getId().equals(curso.getId()));
+        boolean vinculadoLead = leadRepository.existePorCursoId(curso.getId());
+        boolean vinculadoOportunidade = oportunidadeRepository.existePorCursoId(curso.getId());
 
         if (vinculadoLead || vinculadoOportunidade) {
             throw new RegraDeNegocioException("Não é possível excluir o curso porque existem leads ou oportunidades vinculados.");

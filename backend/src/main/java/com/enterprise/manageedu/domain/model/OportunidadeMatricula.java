@@ -76,6 +76,7 @@ public class OportunidadeMatricula {
         this.observacao = normalizarObservacao(observacao);
     }
 
+    // Impede alteração do ID após a oportunidade já estar identificada/persistida.
     public void definirId(Long id) {
         if (id == null || id <= 0) {
             throw new RegraDeNegocioException("ID inválido.");
@@ -157,6 +158,7 @@ public class OportunidadeMatricula {
         return valorEstimado.setScale(2, RoundingMode.UNNECESSARY);
     }
 
+    // Na edição, permite manter uma data prevista antiga se ela não foi alterada.
     private void validarDataPrevista(LocalDate dataPrevista, LocalDate hoje, boolean permiteDataVencidaMantida) {
         if (dataPrevista == null) {
             throw new RegraDeNegocioException("A data prevista é obrigatória.");
@@ -166,6 +168,7 @@ public class OportunidadeMatricula {
         }
     }
 
+    // Garante coerência entre o curso escolhido na oportunidade e o interesse do lead.
     private void validarConsistenciaCursoLead(LeadCandidato leadCandidato, Curso curso) {
         if (leadCandidato.getCursoInteresse() == null || curso == null) {
             return;

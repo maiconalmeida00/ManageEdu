@@ -133,6 +133,18 @@ public class OportunidadeRepositoryImpl implements OportunidadeRepository {
         springDataOportunidadeRepository.deleteById(id);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorCursoId(Long cursoId) {
+        return springDataOportunidadeRepository.existsByCursoId(cursoId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean existePorLeadId(Long leadId) {
+        return springDataOportunidadeRepository.existsByLeadCandidatoId(leadId);
+    }
+
     private OportunidadeMatricula toDomain(OportunidadeJpaEntity entity) {
         if (entity == null) {
             return null;
