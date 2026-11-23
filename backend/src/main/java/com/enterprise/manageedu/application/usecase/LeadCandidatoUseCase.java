@@ -12,7 +12,7 @@ import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
 
 public class LeadCandidatoUseCase {
 
@@ -45,21 +45,17 @@ public class LeadCandidatoUseCase {
                 converterClassificacao(request.classificacao()),
                 cursoInteresse
         );
-        LeadCandidato salvo = leadRepository.salvar(lead);
-        return toResponse(salvo);
+        return toResponse(leadRepository.salvar(lead));
     }
 
     public LeadCandidatoResponseDTO buscarPorId(Long id) {
-        validarId(id);
-        LeadCandidato lead = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
-        return toResponse(lead);
+        return toResponse(buscarLeadOuFalhar(id));
     }
 
     public List<LeadCandidatoResponseDTO> listarTodos() {
         return leadRepository.listarTodos().stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public LeadCandidatoResponseDTO atualizar(Long id, LeadCandidatoRequestDTO request) {
@@ -68,9 +64,7 @@ public class LeadCandidatoUseCase {
             throw new RegraDeNegocioException("Requisição de lead não pode ser nula.");
         }
 
-        LeadCandidato existente = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
-
+        LeadCandidato existente = buscarLeadOuFalhar(id);
         Curso cursoInteresse = buscarCurso(request.cursoInteresseId());
 
         existente.atualizarDados(
@@ -81,22 +75,23 @@ public class LeadCandidatoUseCase {
                 converterClassificacao(request.classificacao()),
                 cursoInteresse
         );
-        LeadCandidato salvo = leadRepository.salvar(existente);
-        return toResponse(salvo);
+        return toResponse(leadRepository.salvar(existente));
     }
 
     public void remover(Long id) {
-        validarId(id);
-        LeadCandidato lead = leadRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+        LeadCandidato lead = buscarLeadOuFalhar(id);
 
-        boolean possuiOportunidade = oportunidadeRepository.existePorLeadId(lead.getId());
-
-        if (possuiOportunidade) {
+        if (oportunidadeRepository.existePorLeadId(lead.getId())) {
             throw new RegraDeNegocioException("Não é possível excluir o lead porque existem oportunidades vinculadas.");
         }
 
         leadRepository.remover(id);
+    }
+
+    private LeadCandidato buscarLeadOuFalhar(Long id) {
+        validarId(id);
+        return leadRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
     }
 
     private Curso buscarCurso(Long cursoId) {
@@ -132,7 +127,7 @@ public class LeadCandidatoUseCase {
             throw new RegraDeNegocioException("A classificação do lead é obrigatória.");
         }
         try {
-            return ClassificacaoLead.valueOf(valor.trim().toUpperCase(java.util.Locale.ROOT));
+            return ClassificacaoLead.valueOf(valor.trim().toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             throw new RegraDeNegocioException("Classificação inválida. Use FRIO, MORNO ou QUENTE.");
         }

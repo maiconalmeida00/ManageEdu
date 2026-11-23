@@ -57,23 +57,9 @@ public class OportunidadeMatricula {
             LocalDate dataPrevista,
             String observacao
     ) {
-        if (leadCandidato == null) {
-            throw new RegraDeNegocioException("O lead candidato da oportunidade é obrigatório.");
-        }
-        if (curso == null) {
-            throw new RegraDeNegocioException("O curso da oportunidade é obrigatório.");
-        }
-        validarConsistenciaCursoLead(leadCandidato, curso);
-        BigDecimal valorNormalizado = validarValorEstimado(valorEstimado);
-        validarDataPrevista(dataPrevista, LocalDate.now(), false);
-
-        this.leadCandidato = leadCandidato;
-        this.curso = curso;
+        definirDados(leadCandidato, curso, valorEstimado, dataPrevista, observacao, false);
         this.status = StatusOportunidade.NOVO_LEAD;
         this.dataCriacao = LocalDateTime.now();
-        this.valorEstimado = valorNormalizado;
-        this.dataPrevista = dataPrevista;
-        this.observacao = normalizarObservacao(observacao);
     }
 
     // Impede alteração do ID após a oportunidade já estar identificada/persistida.
@@ -94,6 +80,18 @@ public class OportunidadeMatricula {
             LocalDate dataPrevista,
             String observacao
     ) {
+        boolean permiteDataVencidaMantida = dataPrevista != null && dataPrevista.equals(this.dataPrevista);
+        definirDados(leadCandidato, curso, valorEstimado, dataPrevista, observacao, permiteDataVencidaMantida);
+    }
+
+    private void definirDados(
+            LeadCandidato leadCandidato,
+            Curso curso,
+            BigDecimal valorEstimado,
+            LocalDate dataPrevista,
+            String observacao,
+            boolean permiteDataVencidaMantida
+    ) {
         if (leadCandidato == null) {
             throw new RegraDeNegocioException("O lead candidato da oportunidade é obrigatório.");
         }
@@ -102,11 +100,7 @@ public class OportunidadeMatricula {
         }
         validarConsistenciaCursoLead(leadCandidato, curso);
         BigDecimal valorNormalizado = validarValorEstimado(valorEstimado);
-        validarDataPrevista(
-                dataPrevista,
-                LocalDate.now(),
-                dataPrevista != null && dataPrevista.equals(this.dataPrevista)
-        );
+        validarDataPrevista(dataPrevista, LocalDate.now(), permiteDataVencidaMantida);
         String observacaoNormalizada = normalizarObservacao(observacao);
 
         this.leadCandidato = leadCandidato;

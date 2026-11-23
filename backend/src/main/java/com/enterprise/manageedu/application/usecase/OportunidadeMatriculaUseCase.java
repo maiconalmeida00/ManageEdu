@@ -14,10 +14,10 @@ import com.enterprise.manageedu.domain.repository.CursoRepository;
 import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class OportunidadeMatriculaUseCase {
 
@@ -42,26 +42,21 @@ public class OportunidadeMatriculaUseCase {
 
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
         Curso curso = buscarCurso(request.cursoId());
-        validarConsistenciaCursoLead(lead, curso);
 
         OportunidadeMatricula oportunidade = new OportunidadeMatricula(
                 lead, curso, request.valorEstimado(), request.dataPrevista(), request.observacao()
         );
-        OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
-        return toResponse(salva);
+        return toResponse(oportunidadeRepository.salvar(oportunidade));
     }
 
     public OportunidadeMatriculaResponseDTO buscarPorId(Long id) {
-        validarId(id);
-        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
-        return toResponse(oportunidade);
+        return toResponse(buscarOportunidadeOuFalhar(id));
     }
 
     public List<OportunidadeMatriculaResponseDTO> listarTodos() {
         return oportunidadeRepository.listarTodos().stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<OportunidadeMatriculaResponseDTO> listarPorStatus(StatusOportunidade status) {
@@ -70,13 +65,16 @@ public class OportunidadeMatriculaUseCase {
         }
         return oportunidadeRepository.listarPorStatus(status).stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public Map<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> listarFunilPorStatus() {
         Map<StatusOportunidade, List<OportunidadeMatriculaResponseDTO>> funil = new LinkedHashMap<>();
         for (StatusOportunidade status : StatusOportunidade.values()) {
-            funil.put(status, listarPorStatus(status));
+            funil.put(status, new ArrayList<>());
+        }
+        for (OportunidadeMatricula oportunidade : oportunidadeRepository.listarTodos()) {
+            funil.get(oportunidade.getStatus()).add(toResponse(oportunidade));
         }
         return funil;
     }
@@ -87,18 +85,14 @@ public class OportunidadeMatriculaUseCase {
             throw new RegraDeNegocioException("Requisição de oportunidade não pode ser nula.");
         }
 
-        OportunidadeMatricula existente = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
-
+        OportunidadeMatricula existente = buscarOportunidadeOuFalhar(id);
         LeadCandidato lead = buscarLead(request.leadCandidatoId());
         Curso curso = buscarCurso(request.cursoId());
-        validarConsistenciaCursoLead(lead, curso);
 
         existente.atualizarDados(
                 lead, curso, request.valorEstimado(), request.dataPrevista(), request.observacao()
         );
-        OportunidadeMatricula salva = oportunidadeRepository.salvar(existente);
-        return toResponse(salva);
+        return toResponse(oportunidadeRepository.salvar(existente));
     }
 
     // Reabertura é um fluxo separado da alteração comum de status.
@@ -115,8 +109,7 @@ public class OportunidadeMatriculaUseCase {
             throw new RegraDeNegocioException("Somente administradores podem reabrir oportunidades.");
         }
 
-        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+        OportunidadeMatricula oportunidade = buscarOportunidadeOuFalhar(id);
         oportunidade.reabrir(justificativa, usuario);
         return toResponse(oportunidadeRepository.salvar(oportunidade));
     }
@@ -125,7 +118,7 @@ public class OportunidadeMatriculaUseCase {
             Long id,
             AtualizarStatusOportunidadeDTO request,
             Usuario usuario
-        ) {
+    ) {
         validarId(id);
         if (request == null) {
             throw new RegraDeNegocioException("Requisição de atualização de status não pode ser nula.");
@@ -137,23 +130,24 @@ public class OportunidadeMatriculaUseCase {
             throw new RegraDeNegocioException("Usuário responsável pela alteração é obrigatório.");
         }
 
-        OportunidadeMatricula oportunidade = oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
-
+        OportunidadeMatricula oportunidade = buscarOportunidadeOuFalhar(id);
         if (!usuario.podeAlterarStatus(oportunidade.getStatus(), request.novoStatus())) {
             throw new RegraDeNegocioException("Transição de status não permitida.");
         }
 
         oportunidade.alterarStatus(request.novoStatus());
-        OportunidadeMatricula salva = oportunidadeRepository.salvar(oportunidade);
-        return toResponse(salva);
+        return toResponse(oportunidadeRepository.salvar(oportunidade));
     }
 
     public void remover(Long id) {
-        validarId(id);
-        oportunidadeRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+        buscarOportunidadeOuFalhar(id);
         oportunidadeRepository.remover(id);
+    }
+
+    private OportunidadeMatricula buscarOportunidadeOuFalhar(Long id) {
+        validarId(id);
+        return oportunidadeRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
     }
 
     private LeadCandidato buscarLead(Long leadId) {
@@ -170,15 +164,6 @@ public class OportunidadeMatriculaUseCase {
         }
         return cursoRepository.buscarPorId(cursoId)
                 .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
-    }
-
-    private void validarConsistenciaCursoLead(LeadCandidato lead, Curso curso) {
-        if (lead == null || lead.getCursoInteresse() == null || curso == null) {
-            return;
-        }
-        if (!lead.getCursoInteresse().getId().equals(curso.getId())) {
-            throw new RegraDeNegocioException("O curso da oportunidade deve ser igual ao curso de interesse do lead.");
-        }
     }
 
     private void validarId(Long id) {

@@ -37,37 +37,21 @@ public class LeadRepositoryImpl implements LeadRepository {
         CursoJpaEntity cursoEntity = springDataCursoRepository.findById(lead.getCursoInteresse().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso de interesse não encontrado no banco."));
 
-        LeadJpaEntity entity;
+        LeadJpaEntity entity = lead.getId() != null
+                ? springDataLeadRepository.findById(lead.getId())
+                        .orElseGet(() -> new LeadJpaEntity(lead.getId(), null, null, null, null, null, null))
+                : new LeadJpaEntity();
+
+        entity.setNome(lead.getNome());
+        entity.setEmail(lead.getEmail());
+        entity.setTelefone(lead.getTelefone());
+        entity.setOrigem(lead.getOrigem());
+        entity.setClassificacao(lead.getClassificacao());
+        entity.setCursoInteresse(cursoEntity);
+
+        LeadJpaEntity salvo = springDataLeadRepository.save(entity);
         if (lead.getId() == null) {
-            entity = new LeadJpaEntity(
-                    null,
-                    lead.getNome(),
-                    lead.getEmail(),
-                    lead.getTelefone(),
-                    lead.getOrigem(),
-                    lead.getClassificacao(),
-                    cursoEntity
-            );
-            entity = springDataLeadRepository.save(entity);
-            lead.definirId(entity.getId());
-        } else {
-            entity = springDataLeadRepository.findById(lead.getId())
-                    .orElseGet(() -> new LeadJpaEntity(
-                            lead.getId(),
-                            lead.getNome(),
-                            lead.getEmail(),
-                            lead.getTelefone(),
-                            lead.getOrigem(),
-                            lead.getClassificacao(),
-                            cursoEntity
-                    ));
-            entity.setNome(lead.getNome());
-            entity.setEmail(lead.getEmail());
-            entity.setTelefone(lead.getTelefone());
-            entity.setOrigem(lead.getOrigem());
-            entity.setClassificacao(lead.getClassificacao());
-            entity.setCursoInteresse(cursoEntity);
-            springDataLeadRepository.save(entity);
+            lead.definirId(salvo.getId());
         }
         return lead;
     }

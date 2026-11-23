@@ -35,20 +35,17 @@ public class UsuarioController {
             @RequestBody UsuarioRequestDTO request,
             Authentication authentication
     ) {
-        Usuario autenticado = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return usuarioUseCase.cadastrar(request, autenticado);
+        return usuarioUseCase.cadastrar(request, obterUsuarioAutenticado(authentication));
     }
 
     @GetMapping
     public List<UsuarioResponseDTO> listarTodos(Authentication authentication) {
-        Usuario autenticado = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return usuarioUseCase.listarTodos(autenticado);
+        return usuarioUseCase.listarTodos(obterUsuarioAutenticado(authentication));
     }
 
     @GetMapping("/{id}")
     public UsuarioResponseDTO buscarPorId(@PathVariable Long id, Authentication authentication) {
-        Usuario autenticado = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return usuarioUseCase.buscarPorId(id, autenticado);
+        return usuarioUseCase.buscarPorId(id, obterUsuarioAutenticado(authentication));
     }
 
     @PutMapping("/{id}")
@@ -57,8 +54,7 @@ public class UsuarioController {
             @RequestBody UsuarioRequestDTO request,
             Authentication authentication
     ) {
-        Usuario autenticado = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return usuarioUseCase.atualizar(id, request, autenticado);
+        return usuarioUseCase.atualizar(id, request, obterUsuarioAutenticado(authentication));
     }
 
     @PatchMapping("/{id}/ativo")
@@ -67,8 +63,11 @@ public class UsuarioController {
             @RequestParam boolean ativo,
             Authentication authentication
     ) {
-        Usuario autenticado = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return usuarioUseCase.alterarAtivo(id, ativo, autenticado);
+        return usuarioUseCase.alterarAtivo(id, ativo, obterUsuarioAutenticado(authentication));
+    }
+
+    private Usuario obterUsuarioAutenticado(Authentication authentication) {
+        return usuarioUseCase.buscarDominioPorEmail(authentication.getName());
     }
 }
 

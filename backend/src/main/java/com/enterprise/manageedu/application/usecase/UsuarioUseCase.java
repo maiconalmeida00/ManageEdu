@@ -4,9 +4,6 @@ import com.enterprise.manageedu.application.dto.UsuarioRequestDTO;
 import com.enterprise.manageedu.application.dto.UsuarioResponseDTO;
 import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.domain.exception.ResourceNotFoundException;
-import com.enterprise.manageedu.domain.model.Administrador;
-import com.enterprise.manageedu.domain.model.OperadorCaptacao;
-import com.enterprise.manageedu.domain.model.PerfilUsuario;
 import com.enterprise.manageedu.domain.model.Usuario;
 import com.enterprise.manageedu.domain.repository.UsuarioRepository;
 import org.slf4j.Logger;
@@ -29,12 +26,7 @@ public class UsuarioUseCase {
 
     public UsuarioResponseDTO cadastrar(UsuarioRequestDTO request, Usuario usuarioAutenticado) {
         validarPermissaoAdministrador(usuarioAutenticado);
-        if (request == null) {
-            throw new RegraDeNegocioException("Requisição de usuário não pode ser nula.");
-        }
-        if (request.perfil() == null) {
-            throw new RegraDeNegocioException("O perfil do usuário é obrigatório.");
-        }
+        validarRequisicao(request);
         if (request.senha() == null || request.senha().isBlank() || request.senha().trim().length() < 6) {
             throw new RegraDeNegocioException("A senha deve ter pelo menos 6 caracteres.");
         }
@@ -47,7 +39,7 @@ public class UsuarioUseCase {
         String senhaHash = passwordEncoder.encode(request.senha());
         boolean ativo = request.ativo() == null || request.ativo();
 
-        Usuario novoUsuario = instanciarUsuario(null, request.nome(), emailNormalizado, senhaHash, request.perfil(), ativo);
+        Usuario novoUsuario = Usuario.criar(null, request.nome(), emailNormalizado, senhaHash, request.perfil(), ativo);
         Usuario salvo = usuarioRepository.salvar(novoUsuario);
 
         log.info("Ação=CADASTRO_USUARIO | Responsavel={} | UsuarioId={} | Email={} | Perfil={}",
@@ -65,24 +57,15 @@ public class UsuarioUseCase {
 
     public UsuarioResponseDTO buscarPorId(Long id, Usuario usuarioAutenticado) {
         validarPermissaoAdministrador(usuarioAutenticado);
-        validarId(id);
-        Usuario usuario = usuarioRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
-        return toResponse(usuario);
+        return toResponse(buscarUsuarioOuFalhar(id));
     }
 
     public UsuarioResponseDTO atualizar(Long id, UsuarioRequestDTO request, Usuario usuarioAutenticado) {
         validarPermissaoAdministrador(usuarioAutenticado);
         validarId(id);
-        if (request == null) {
-            throw new RegraDeNegocioException("Requisição de usuário não pode ser nula.");
-        }
-        if (request.perfil() == null) {
-            throw new RegraDeNegocioException("O perfil do usuário é obrigatório.");
-        }
+        validarRequisicao(request);
 
-        Usuario existente = usuarioRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        Usuario existente = buscarUsuarioOuFalhar(id);
 
         String emailNormalizado = normalizarEmail(request.email());
         usuarioRepository.buscarPorEmail(emailNormalizado)
@@ -105,7 +88,7 @@ public class UsuarioUseCase {
         }
 
         // Recria a instância conforme o perfil escolhido para manter o polimorfismo correto.
-        Usuario atualizado = instanciarUsuario(
+        Usuario atualizado = Usuario.criar(
                 existente.getId(),
                 request.nome(),
                 emailNormalizado,
@@ -129,8 +112,7 @@ public class UsuarioUseCase {
             throw new RegraDeNegocioException("O administrador não pode desativar o próprio usuário.");
         }
 
-        Usuario existente = usuarioRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+        Usuario existente = buscarUsuarioOuFalhar(id);
         existente.alterarAtivo(ativo);
         Usuario salvo = usuarioRepository.salvar(existente);
 
@@ -158,24 +140,25 @@ public class UsuarioUseCase {
         );
     }
 
+    private void validarRequisicao(UsuarioRequestDTO request) {
+        if (request == null) {
+            throw new RegraDeNegocioException("Requisição de usuário não pode ser nula.");
+        }
+        if (request.perfil() == null) {
+            throw new RegraDeNegocioException("O perfil do usuário é obrigatório.");
+        }
+    }
+
+    private Usuario buscarUsuarioOuFalhar(Long id) {
+        validarId(id);
+        return usuarioRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado."));
+    }
+
     private void validarPermissaoAdministrador(Usuario usuario) {
         if (usuario == null || !usuario.podeGerenciarUsuarios()) {
             throw new RegraDeNegocioException("Somente administradores podem gerenciar usuários.");
         }
-    }
-
-    private Usuario instanciarUsuario(
-            Long id,
-            String nome,
-            String email,
-            String senhaHash,
-            PerfilUsuario perfil,
-            boolean ativo
-    ) {
-        if (perfil == PerfilUsuario.ADMINISTRADOR) {
-            return new Administrador(id, nome, email, senhaHash, ativo);
-        }
-        return new OperadorCaptacao(id, nome, email, senhaHash, ativo);
     }
 
     private String normalizarEmail(String email) {

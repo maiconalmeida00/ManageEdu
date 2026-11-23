@@ -40,6 +40,23 @@ public abstract class Usuario {
         this.ativo = ativo;
     }
 
+    public static Usuario criar(
+            Long id,
+            String nome,
+            String email,
+            String senhaHash,
+            PerfilUsuario perfil,
+            boolean ativo
+    ) {
+        if (perfil == null) {
+            throw new RegraDeNegocioException("O perfil do usuário é obrigatório.");
+        }
+        if (perfil == PerfilUsuario.ADMINISTRADOR) {
+            return new Administrador(id, nome, email, senhaHash, ativo);
+        }
+        return new OperadorCaptacao(id, nome, email, senhaHash, ativo);
+    }
+
     // Impede alteração do ID após o usuário já estar identificado/persistido.
     public void definirId(Long id) {
         if (id == null || id <= 0) {

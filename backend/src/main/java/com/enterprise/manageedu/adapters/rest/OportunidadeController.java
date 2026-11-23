@@ -94,17 +94,21 @@ public class OportunidadeController {
             @RequestBody AtualizarStatusOportunidadeDTO request,
             Authentication authentication
     ) {
-        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(obterEmailResponsavel(authentication));
-        OportunidadeMatriculaResponseDTO atualizada = oportunidadeUseCase.alterarStatus(id, request, usuario);
-        log.info("Ação=MUDANCA_STATUS_OPORTUNIDADE | Responsavel={} | OportunidadeId={} | NovoStatus={}",
-                usuario.getEmail(), atualizada.id(), atualizada.status());
-        return atualizada;
+        return alterarStatus(id, request, authentication);
     }
 
     @PutMapping("/{id}/status")
     public OportunidadeMatriculaResponseDTO alterarStatusPut(
             @PathVariable Long id,
             @RequestBody AtualizarStatusOportunidadeDTO request,
+            Authentication authentication
+    ) {
+        return alterarStatus(id, request, authentication);
+    }
+
+    private OportunidadeMatriculaResponseDTO alterarStatus(
+            Long id,
+            AtualizarStatusOportunidadeDTO request,
             Authentication authentication
     ) {
         Usuario usuario = usuarioUseCase.buscarDominioPorEmail(obterEmailResponsavel(authentication));

@@ -1,8 +1,5 @@
 package com.enterprise.manageedu.infrastructure.persistence;
 
-import com.enterprise.manageedu.domain.model.Administrador;
-import com.enterprise.manageedu.domain.model.OperadorCaptacao;
-import com.enterprise.manageedu.domain.model.PerfilUsuario;
 import com.enterprise.manageedu.domain.model.Usuario;
 import com.enterprise.manageedu.domain.repository.UsuarioRepository;
 import com.enterprise.manageedu.infrastructure.persistence.entity.UsuarioJpaEntity;
@@ -25,34 +22,20 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
     @Override
     @Transactional
     public Usuario salvar(Usuario usuario) {
-        UsuarioJpaEntity entity;
+        UsuarioJpaEntity entity = usuario.getId() != null
+                ? springDataUsuarioRepository.findById(usuario.getId())
+                        .orElseGet(() -> new UsuarioJpaEntity(usuario.getId(), null, null, null, null, false))
+                : new UsuarioJpaEntity();
+
+        entity.setNome(usuario.getNome());
+        entity.setEmail(usuario.getEmail());
+        entity.setSenhaHash(usuario.getSenhaHash());
+        entity.setPerfil(usuario.getPerfil());
+        entity.setAtivo(usuario.isAtivo());
+
+        UsuarioJpaEntity salvo = springDataUsuarioRepository.save(entity);
         if (usuario.getId() == null) {
-            entity = new UsuarioJpaEntity(
-                    null,
-                    usuario.getNome(),
-                    usuario.getEmail(),
-                    usuario.getSenhaHash(),
-                    usuario.getPerfil(),
-                    usuario.isAtivo()
-            );
-            entity = springDataUsuarioRepository.save(entity);
-            usuario.definirId(entity.getId());
-        } else {
-            entity = springDataUsuarioRepository.findById(usuario.getId())
-                    .orElseGet(() -> new UsuarioJpaEntity(
-                            usuario.getId(),
-                            usuario.getNome(),
-                            usuario.getEmail(),
-                            usuario.getSenhaHash(),
-                            usuario.getPerfil(),
-                            usuario.isAtivo()
-                    ));
-            entity.setNome(usuario.getNome());
-            entity.setEmail(usuario.getEmail());
-            entity.setSenhaHash(usuario.getSenhaHash());
-            entity.setPerfil(usuario.getPerfil());
-            entity.setAtivo(usuario.isAtivo());
-            springDataUsuarioRepository.save(entity);
+            usuario.definirId(salvo.getId());
         }
         return usuario;
     }
@@ -93,20 +76,12 @@ public class UsuarioRepositoryImpl implements UsuarioRepository {
         if (entity == null) {
             return null;
         }
-        if (entity.getPerfil() == PerfilUsuario.ADMINISTRADOR) {
-            return new Administrador(
-                    entity.getId(),
-                    entity.getNome(),
-                    entity.getEmail(),
-                    entity.getSenhaHash(),
-                    entity.isAtivo()
-            );
-        }
-        return new OperadorCaptacao(
+        return Usuario.criar(
                 entity.getId(),
                 entity.getNome(),
                 entity.getEmail(),
                 entity.getSenhaHash(),
+                entity.getPerfil(),
                 entity.isAtivo()
         );
     }

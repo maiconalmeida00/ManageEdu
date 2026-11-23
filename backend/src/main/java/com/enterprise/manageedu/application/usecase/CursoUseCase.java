@@ -12,7 +12,6 @@ import com.enterprise.manageedu.domain.repository.LeadRepository;
 import com.enterprise.manageedu.domain.repository.OportunidadeRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class CursoUseCase {
 
@@ -36,25 +35,23 @@ public class CursoUseCase {
         }
 
         Curso curso = new Curso(
-            request.nome(),
-            converterModalidade(request.modalidade()),
-            converterTurno(request.turno())
+                request.nome(),
+                converterEnum(request.modalidade(), ModalidadeCurso.class,
+                        "A modalidade do curso é obrigatória.", "Modalidade de curso inválida."),
+                converterEnum(request.turno(), TurnoCurso.class,
+                        "O turno do curso é obrigatório.", "Turno de curso inválido.")
         );
-        Curso salvo = cursoRepository.salvar(curso);
-        return toResponse(salvo);
+        return toResponse(cursoRepository.salvar(curso));
     }
 
     public CursoResponseDTO buscarPorId(Long id) {
-        validarId(id);
-        Curso curso = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
-        return toResponse(curso);
+        return toResponse(buscarCursoOuFalhar(id));
     }
 
     public List<CursoResponseDTO> listarTodos() {
         return cursoRepository.listarTodos().stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public CursoResponseDTO atualizar(Long id, CursoRequestDTO request) {
@@ -63,31 +60,33 @@ public class CursoUseCase {
             throw new RegraDeNegocioException("Requisição de curso não pode ser nula.");
         }
 
-        Curso existente = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
-
+        Curso existente = buscarCursoOuFalhar(id);
         existente.atualizarDados(
-            request.nome(),
-            converterModalidade(request.modalidade()),
-            converterTurno(request.turno())
+                request.nome(),
+                converterEnum(request.modalidade(), ModalidadeCurso.class,
+                        "A modalidade do curso é obrigatória.", "Modalidade de curso inválida."),
+                converterEnum(request.turno(), TurnoCurso.class,
+                        "O turno do curso é obrigatório.", "Turno de curso inválido.")
         );
-        Curso salvo = cursoRepository.salvar(existente);
-        return toResponse(salvo);
+        return toResponse(cursoRepository.salvar(existente));
     }
 
     public void remover(Long id) {
-        validarId(id);
-        Curso curso = cursoRepository.buscarPorId(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
+        Curso curso = buscarCursoOuFalhar(id);
 
-        boolean vinculadoLead = leadRepository.existePorCursoId(curso.getId());
-        boolean vinculadoOportunidade = oportunidadeRepository.existePorCursoId(curso.getId());
-
-        if (vinculadoLead || vinculadoOportunidade) {
+        boolean vinculado = leadRepository.existePorCursoId(curso.getId())
+                || oportunidadeRepository.existePorCursoId(curso.getId());
+        if (vinculado) {
             throw new RegraDeNegocioException("Não é possível excluir o curso porque existem leads ou oportunidades vinculados.");
         }
 
         cursoRepository.remover(id);
+    }
+
+    private Curso buscarCursoOuFalhar(Long id) {
+        validarId(id);
+        return cursoRepository.buscarPorId(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Curso não encontrado."));
     }
 
     private void validarId(Long id) {
@@ -96,25 +95,19 @@ public class CursoUseCase {
         }
     }
 
-    private ModalidadeCurso converterModalidade(String modalidade) {
-        if (modalidade == null || modalidade.isBlank()) {
-            throw new RegraDeNegocioException("A modalidade do curso é obrigatória.");
+    private <E extends Enum<E>> E converterEnum(
+            String valor,
+            Class<E> enumType,
+            String mensagemObrigatorio,
+            String mensagemInvalido
+    ) {
+        if (valor == null || valor.isBlank()) {
+            throw new RegraDeNegocioException(mensagemObrigatorio);
         }
         try {
-            return ModalidadeCurso.valueOf(modalidade.trim().toUpperCase());
+            return Enum.valueOf(enumType, valor.trim().toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new RegraDeNegocioException("Modalidade de curso inválida.");
-        }
-    }
-
-    private TurnoCurso converterTurno(String turno) {
-        if (turno == null || turno.isBlank()) {
-            throw new RegraDeNegocioException("O turno do curso é obrigatório.");
-        }
-        try {
-            return TurnoCurso.valueOf(turno.trim().toUpperCase());
-        } catch (IllegalArgumentException e) {
-            throw new RegraDeNegocioException("Turno de curso inválido.");
+            throw new RegraDeNegocioException(mensagemInvalido);
         }
     }
 

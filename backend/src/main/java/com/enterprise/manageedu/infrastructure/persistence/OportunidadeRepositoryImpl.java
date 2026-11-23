@@ -52,57 +52,55 @@ public class OportunidadeRepositoryImpl implements OportunidadeRepository {
         CursoJpaEntity cursoEntity = springDataCursoRepository.findById(oportunidade.getCurso().getId())
                 .orElseThrow(() -> new ResourceNotFoundException("Curso da oportunidade não encontrado no banco."));
 
-        OportunidadeJpaEntity entity;
-        if (oportunidade.getId() == null) {
-            entity = new OportunidadeJpaEntity(
-                    null,
-                    leadEntity,
-                    cursoEntity,
-                    oportunidade.getStatus(),
-                    oportunidade.getDataCriacao(),
-                    oportunidade.getValorEstimado(),
-                    oportunidade.getDataPrevista(),
-                    oportunidade.getObservacao()
-            );
-            entity = springDataOportunidadeRepository.save(entity);
-            oportunidade.definirId(entity.getId());
-        } else {
-            entity = springDataOportunidadeRepository.findById(oportunidade.getId())
-                    .orElseGet(() -> new OportunidadeJpaEntity(
-                            oportunidade.getId(),
-                            leadEntity,
-                            cursoEntity,
-                            oportunidade.getStatus(),
-                            oportunidade.getDataCriacao(),
-                            oportunidade.getValorEstimado(),
-                            oportunidade.getDataPrevista(),
-                            oportunidade.getObservacao()
-                    ));
-            entity.setLeadCandidato(leadEntity);
-            entity.setCurso(cursoEntity);
-            entity.setStatus(oportunidade.getStatus());
-            entity.setValorEstimado(oportunidade.getValorEstimado());
-            entity.setDataPrevista(oportunidade.getDataPrevista());
-            entity.setObservacao(oportunidade.getObservacao());
+        boolean novaOportunidade = oportunidade.getId() == null;
+        OportunidadeJpaEntity entity = novaOportunidade
+                ? new OportunidadeJpaEntity()
+                : springDataOportunidadeRepository.findById(oportunidade.getId())
+                        .orElseGet(() -> {
+                            OportunidadeJpaEntity fallback = new OportunidadeJpaEntity();
+                            fallback.setId(oportunidade.getId());
+                            fallback.setDataCriacao(oportunidade.getDataCriacao());
+                            return fallback;
+                        });
 
-            int persistidas = entity.getReaberturas().size();
-            List<ReaberturaOportunidade> domainReaberturas = oportunidade.getReaberturas();
-            for (int i = persistidas; i < domainReaberturas.size(); i++) {
-                ReaberturaOportunidade r = domainReaberturas.get(i);
-                ReaberturaJpaEntity reabEntity = new ReaberturaJpaEntity(
-                        entity,
-                        r.dataHora(),
-                        r.responsavelId(),
-                        r.responsavelNome(),
-                        r.justificativa(),
-                        r.statusOrigem(),
-                        r.statusDestino()
-                );
-                entity.adicionarReabertura(reabEntity);
-            }
-            springDataOportunidadeRepository.save(entity);
+        entity.setLeadCandidato(leadEntity);
+        entity.setCurso(cursoEntity);
+        entity.setStatus(oportunidade.getStatus());
+        if (novaOportunidade) {
+            entity.setDataCriacao(oportunidade.getDataCriacao());
+        }
+        entity.setValorEstimado(oportunidade.getValorEstimado());
+        entity.setDataPrevista(oportunidade.getDataPrevista());
+        entity.setObservacao(oportunidade.getObservacao());
+
+        if (!novaOportunidade) {
+            sincronizarReaberturas(entity, oportunidade.getReaberturas());
+        }
+
+        OportunidadeJpaEntity salva = springDataOportunidadeRepository.save(entity);
+        if (novaOportunidade) {
+            oportunidade.definirId(salva.getId());
         }
         return oportunidade;
+    }
+
+    private void sincronizarReaberturas(
+            OportunidadeJpaEntity entity,
+            List<ReaberturaOportunidade> domainReaberturas
+    ) {
+        int persistidas = entity.getReaberturas().size();
+        for (int i = persistidas; i < domainReaberturas.size(); i++) {
+            ReaberturaOportunidade r = domainReaberturas.get(i);
+            entity.adicionarReabertura(new ReaberturaJpaEntity(
+                    entity,
+                    r.dataHora(),
+                    r.responsavelId(),
+                    r.responsavelNome(),
+                    r.justificativa(),
+                    r.statusOrigem(),
+                    r.statusDestino()
+            ));
+        }
     }
 
     @Override

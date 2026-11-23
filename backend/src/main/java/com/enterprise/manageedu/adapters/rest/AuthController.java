@@ -33,6 +33,8 @@ public class AuthController {
 
     private final AuthenticationManager authenticationManager;
     private final UsuarioUseCase usuarioUseCase;
+    private final HttpSessionSecurityContextRepository securityContextRepository =
+            new HttpSessionSecurityContextRepository();
 
     public AuthController(AuthenticationManager authenticationManager, UsuarioUseCase usuarioUseCase) {
         this.authenticationManager = authenticationManager;
@@ -61,8 +63,7 @@ public class AuthController {
             SecurityContextHolder.setContext(context);
 
             // Persiste a sessão autenticada no cookie JSESSIONID.
-            HttpSessionSecurityContextRepository repo = new HttpSessionSecurityContextRepository();
-            repo.saveContext(context, httpRequest, httpResponse);
+            securityContextRepository.saveContext(context, httpRequest, httpResponse);
 
             Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
             log.info("Ação=LOGIN | Responsavel={} | Perfil={}", usuario.getEmail(), usuario.getPerfil());

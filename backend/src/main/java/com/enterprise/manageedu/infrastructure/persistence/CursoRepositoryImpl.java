@@ -22,23 +22,18 @@ public class CursoRepositoryImpl implements CursoRepository {
     @Override
     @Transactional
     public Curso salvar(Curso curso) {
-        CursoJpaEntity entity;
+        CursoJpaEntity entity = curso.getId() != null
+                ? springDataCursoRepository.findById(curso.getId())
+                        .orElseGet(() -> new CursoJpaEntity(curso.getId(), null, null, null))
+                : new CursoJpaEntity();
+
+        entity.setNome(curso.getNome());
+        entity.setModalidade(curso.getModalidade());
+        entity.setTurno(curso.getTurno());
+
+        CursoJpaEntity salvo = springDataCursoRepository.save(entity);
         if (curso.getId() == null) {
-            entity = new CursoJpaEntity(
-                    null,
-                    curso.getNome(),
-                    curso.getModalidade(),
-                    curso.getTurno()
-            );
-            entity = springDataCursoRepository.save(entity);
-            curso.definirId(entity.getId());
-        } else {
-            entity = springDataCursoRepository.findById(curso.getId())
-                    .orElseGet(() -> new CursoJpaEntity(curso.getId(), curso.getNome(), curso.getModalidade(), curso.getTurno()));
-            entity.setNome(curso.getNome());
-            entity.setModalidade(curso.getModalidade());
-            entity.setTurno(curso.getTurno());
-            springDataCursoRepository.save(entity);
+            curso.definirId(salvo.getId());
         }
         return curso;
     }
@@ -70,18 +65,6 @@ public class CursoRepositoryImpl implements CursoRepository {
         Curso curso = new Curso(entity.getNome(), entity.getModalidade(), entity.getTurno());
         curso.definirId(entity.getId());
         return curso;
-    }
-
-    public CursoJpaEntity toEntity(Curso curso) {
-        if (curso == null) {
-            return null;
-        }
-        return new CursoJpaEntity(
-                curso.getId(),
-                curso.getNome(),
-                curso.getModalidade(),
-                curso.getTurno()
-        );
     }
 }
 

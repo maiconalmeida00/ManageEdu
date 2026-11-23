@@ -41,18 +41,12 @@ public class AnexoController {
             @RequestParam("arquivo") MultipartFile arquivo,
             Authentication authentication
     ) {
-        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return anexoUseCase.enviarFotoLead(leadId, arquivo, usuario);
+        return anexoUseCase.enviarFotoLead(leadId, arquivo, obterUsuarioAutenticado(authentication));
     }
 
     @GetMapping("/leads/{leadId}/foto")
     public ResponseEntity<Resource> exibirFotoLead(@PathVariable Long leadId) {
-        AnexoUseCase.ArquivoDownload download = anexoUseCase.buscarFotoLead(leadId);
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(download.anexo().getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "inline; filename=\"" + download.anexo().getNomeOriginal() + "\"")
-                .body(download.resource());
+        return buildFileResponse(anexoUseCase.buscarFotoLead(leadId), "inline");
     }
 
     @PostMapping(value = "/leads/{leadId}/anexos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -62,8 +56,7 @@ public class AnexoController {
             @RequestParam("arquivo") MultipartFile arquivo,
             Authentication authentication
     ) {
-        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return anexoUseCase.enviarAnexoLead(leadId, arquivo, usuario);
+        return anexoUseCase.enviarAnexoLead(leadId, arquivo, obterUsuarioAutenticado(authentication));
     }
 
     @GetMapping("/leads/{leadId}/anexos")
@@ -78,8 +71,7 @@ public class AnexoController {
             @RequestParam("arquivo") MultipartFile arquivo,
             Authentication authentication
     ) {
-        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        return anexoUseCase.enviarAnexoOportunidade(oportunidadeId, arquivo, usuario);
+        return anexoUseCase.enviarAnexoOportunidade(oportunidadeId, arquivo, obterUsuarioAutenticado(authentication));
     }
 
     @GetMapping("/oportunidades/{oportunidadeId}/anexos")
@@ -89,19 +81,25 @@ public class AnexoController {
 
     @GetMapping("/anexos/{id}/download")
     public ResponseEntity<Resource> download(@PathVariable Long id) {
-        AnexoUseCase.ArquivoDownload download = anexoUseCase.buscarParaDownload(id);
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(download.anexo().getContentType()))
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"" + download.anexo().getNomeOriginal() + "\"")
-                .body(download.resource());
+        return buildFileResponse(anexoUseCase.buscarParaDownload(id), "attachment");
     }
 
     @DeleteMapping("/anexos/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void remover(@PathVariable Long id, Authentication authentication) {
-        Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
-        anexoUseCase.remover(id, usuario);
+        anexoUseCase.remover(id, obterUsuarioAutenticado(authentication));
+    }
+
+    private Usuario obterUsuarioAutenticado(Authentication authentication) {
+        return usuarioUseCase.buscarDominioPorEmail(authentication.getName());
+    }
+
+    private ResponseEntity<Resource> buildFileResponse(AnexoUseCase.ArquivoDownload download, String disposition) {
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(download.anexo().getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        disposition + "; filename=\"" + download.anexo().getNomeOriginal() + "\"")
+                .body(download.resource());
     }
 }
 

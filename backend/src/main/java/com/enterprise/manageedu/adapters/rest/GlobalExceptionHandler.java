@@ -24,14 +24,7 @@ public class GlobalExceptionHandler {
             ResourceNotFoundException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.NOT_FOUND.value(),
-                "Recurso não encontrado",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(erro);
+        return buildError(HttpStatus.NOT_FOUND, "Recurso não encontrado", ex.getMessage(), request);
     }
 
     @ExceptionHandler(RegraDeNegocioException.class)
@@ -39,14 +32,7 @@ public class GlobalExceptionHandler {
             RegraDeNegocioException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Regra de negócio violada",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+        return buildError(HttpStatus.BAD_REQUEST, "Regra de negócio violada", ex.getMessage(), request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
@@ -54,14 +40,7 @@ public class GlobalExceptionHandler {
             IllegalArgumentException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Parâmetro inválido",
-                ex.getMessage(),
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+        return buildError(HttpStatus.BAD_REQUEST, "Parâmetro inválido", ex.getMessage(), request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -72,15 +51,7 @@ public class GlobalExceptionHandler {
         String mensagens = ex.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
                 .collect(Collectors.joining("; "));
-
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "Erro de validação",
-                mensagens,
-                request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
+        return buildError(HttpStatus.BAD_REQUEST, "Erro de validação", mensagens, request);
     }
 
     @ExceptionHandler(AuthenticationException.class)
@@ -88,14 +59,12 @@ public class GlobalExceptionHandler {
             AuthenticationException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.UNAUTHORIZED.value(),
+        return buildError(
+                HttpStatus.UNAUTHORIZED,
                 "Falha na autenticação",
                 "E-mail ou senha inválidos, ou usuário inativo.",
-                request.getRequestURI()
+                request
         );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(erro);
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -103,14 +72,12 @@ public class GlobalExceptionHandler {
             AccessDeniedException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.FORBIDDEN.value(),
+        return buildError(
+                HttpStatus.FORBIDDEN,
                 "Acesso negado",
                 "Você não tem permissão para realizar esta operação.",
-                request.getRequestURI()
+                request
         );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(erro);
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
@@ -118,14 +85,12 @@ public class GlobalExceptionHandler {
             MaxUploadSizeExceededException ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
-                LocalDateTime.now(),
-                HttpStatus.BAD_REQUEST.value(),
+        return buildError(
+                HttpStatus.BAD_REQUEST,
                 "Arquivo muito grande",
                 "O tamanho do arquivo excede o limite máximo permitido (10 MB).",
-                request.getRequestURI()
+                request
         );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(erro);
     }
 
     @ExceptionHandler(Exception.class)
@@ -133,14 +98,23 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
-        ErrorResponseDTO erro = new ErrorResponseDTO(
+        return buildError(HttpStatus.INTERNAL_SERVER_ERROR, "Erro interno do servidor", ex.getMessage(), request);
+    }
+
+    private ResponseEntity<ErrorResponseDTO> buildError(
+            HttpStatus status,
+            String erro,
+            String mensagem,
+            HttpServletRequest request
+    ) {
+        ErrorResponseDTO body = new ErrorResponseDTO(
                 LocalDateTime.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "Erro interno do servidor",
-                ex.getMessage(),
+                status.value(),
+                erro,
+                mensagem,
                 request.getRequestURI()
         );
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(erro);
+        return ResponseEntity.status(status).body(body);
     }
 }
 

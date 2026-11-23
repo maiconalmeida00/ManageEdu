@@ -61,9 +61,7 @@ public class AnexoUseCase {
 
     public AnexoResponseDTO enviarFotoLead(Long leadId, MultipartFile arquivo, Usuario usuario) {
         validarUsuario(usuario);
-        validarId(leadId, "ID do lead inválido.");
-        leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+        validarExistenciaLead(leadId);
 
         String extensao = validarArquivo(arquivo, TAMANHO_MAXIMO_FOTO, EXTENSOES_POR_CONTENT_TYPE_FOTO, EXTENSOES_FOTO,
                 "A foto deve ser JPG, PNG ou WEBP com no máximo 5 MB.");
@@ -76,9 +74,7 @@ public class AnexoUseCase {
 
     public AnexoResponseDTO enviarAnexoLead(Long leadId, MultipartFile arquivo, Usuario usuario) {
         validarUsuario(usuario);
-        validarId(leadId, "ID do lead inválido.");
-        leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+        validarExistenciaLead(leadId);
 
         String extensao = validarArquivo(arquivo, TAMANHO_MAXIMO_ANEXO, EXTENSOES_POR_CONTENT_TYPE_ANEXO, EXTENSOES_ANEXO,
                 "O anexo deve ser PDF, JPG ou PNG com no máximo 10 MB.");
@@ -91,9 +87,7 @@ public class AnexoUseCase {
 
     public AnexoResponseDTO enviarAnexoOportunidade(Long oportunidadeId, MultipartFile arquivo, Usuario usuario) {
         validarUsuario(usuario);
-        validarId(oportunidadeId, "ID da oportunidade inválido.");
-        oportunidadeRepository.buscarPorId(oportunidadeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+        validarExistenciaOportunidade(oportunidadeId);
 
         String extensao = validarArquivo(arquivo, TAMANHO_MAXIMO_ANEXO, EXTENSOES_POR_CONTENT_TYPE_ANEXO, EXTENSOES_ANEXO,
                 "O anexo deve ser PDF, JPG ou PNG com no máximo 10 MB.");
@@ -105,18 +99,14 @@ public class AnexoUseCase {
     }
 
     public List<AnexoResponseDTO> listarAnexosLead(Long leadId) {
-        validarId(leadId, "ID do lead inválido.");
-        leadRepository.buscarPorId(leadId)
-                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+        validarExistenciaLead(leadId);
         return anexoRepository.listarPorLeadIdETipo(leadId, TipoAnexo.ANEXO_LEAD).stream()
                 .map(this::toResponse)
                 .toList();
     }
 
     public List<AnexoResponseDTO> listarAnexosOportunidade(Long oportunidadeId) {
-        validarId(oportunidadeId, "ID da oportunidade inválido.");
-        oportunidadeRepository.buscarPorId(oportunidadeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+        validarExistenciaOportunidade(oportunidadeId);
         return anexoRepository.listarPorOportunidadeId(oportunidadeId).stream()
                 .map(this::toResponse)
                 .toList();
@@ -133,17 +123,13 @@ public class AnexoUseCase {
     }
 
     public ArquivoDownload buscarParaDownload(Long anexoId) {
-        validarId(anexoId, "ID do anexo inválido.");
-        Anexo anexo = anexoRepository.buscarPorId(anexoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado."));
+        Anexo anexo = buscarAnexoOuFalhar(anexoId);
         return new ArquivoDownload(anexo, armazenamento.carregar(anexo.getNomeInterno()));
     }
 
     public void remover(Long anexoId, Usuario usuario) {
         validarUsuario(usuario);
-        validarId(anexoId, "ID do anexo inválido.");
-        Anexo anexo = anexoRepository.buscarPorId(anexoId)
-                .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado."));
+        Anexo anexo = buscarAnexoOuFalhar(anexoId);
 
         anexoRepository.remover(anexoId);
         armazenamento.removerSilenciosamente(anexo.getNomeInterno());
@@ -200,7 +186,8 @@ public class AnexoUseCase {
         }
 
         String contentType = arquivo.getContentType();
-        if (contentType == null || !extensoesPorContentType.containsKey(contentType.toLowerCase())) {
+        String contentTypeNormalizado = contentType != null ? contentType.toLowerCase() : null;
+        if (contentTypeNormalizado == null || !extensoesPorContentType.containsKey(contentTypeNormalizado)) {
             throw new RegraDeNegocioException(mensagemErroTipo);
         }
 
@@ -212,7 +199,25 @@ public class AnexoUseCase {
             }
         }
 
-        return extensoesPorContentType.get(contentType.toLowerCase());
+        return extensoesPorContentType.get(contentTypeNormalizado);
+    }
+
+    private void validarExistenciaLead(Long leadId) {
+        validarId(leadId, "ID do lead inválido.");
+        leadRepository.buscarPorId(leadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado."));
+    }
+
+    private void validarExistenciaOportunidade(Long oportunidadeId) {
+        validarId(oportunidadeId, "ID da oportunidade inválido.");
+        oportunidadeRepository.buscarPorId(oportunidadeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Oportunidade não encontrada."));
+    }
+
+    private Anexo buscarAnexoOuFalhar(Long anexoId) {
+        validarId(anexoId, "ID do anexo inválido.");
+        return anexoRepository.buscarPorId(anexoId)
+                .orElseThrow(() -> new ResourceNotFoundException("Anexo não encontrado."));
     }
 
     private void validarUsuario(Usuario usuario) {
