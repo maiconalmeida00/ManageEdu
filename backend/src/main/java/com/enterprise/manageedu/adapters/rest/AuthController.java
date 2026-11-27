@@ -18,6 +18,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +27,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api")
 public class AuthController {
 
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
@@ -41,7 +42,8 @@ public class AuthController {
         this.usuarioUseCase = usuarioUseCase;
     }
 
-    @PostMapping("/login")
+    @PostMapping("/sessoes")
+    @ResponseStatus(HttpStatus.CREATED)
     public UsuarioResponseDTO login(
             @RequestBody LoginRequestDTO request,
             HttpServletRequest httpRequest,
@@ -74,7 +76,7 @@ public class AuthController {
         }
     }
 
-    @PostMapping("/logout")
+    @DeleteMapping("/sessoes/atual")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void logout(HttpServletRequest request, Authentication authentication) {
         String email = authentication != null ? authentication.getName() : "desconhecido";
@@ -86,13 +88,13 @@ public class AuthController {
         log.info("Ação=LOGOUT | Responsavel={}", email);
     }
 
-    @GetMapping("/me")
+    @GetMapping("/sessoes/atual")
     public UsuarioResponseDTO usuarioAtual(Authentication authentication) {
         Usuario usuario = usuarioUseCase.buscarDominioPorEmail(authentication.getName());
         return usuarioUseCase.toResponse(usuario);
     }
 
-    @GetMapping("/csrf")
+    @GetMapping("/csrf-token")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void csrf() {
         // Endpoint auxiliar para o frontend receber o cookie XSRF-TOKEN.

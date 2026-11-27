@@ -242,7 +242,7 @@ public class AnexoUseCase {
                 anexo.getLeadId(),
                 anexo.getOportunidadeId(),
                 anexo.getDataUpload(),
-                "/api/anexos/" + anexo.getId() + "/download"
+                "/api/anexos/" + anexo.getId() + "/arquivo"
         );
     }
 

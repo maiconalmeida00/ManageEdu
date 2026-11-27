@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Entrar · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="pagina-login">
+    <div class="cartao caixa-login">
+      <div class="logo"><span class="logo-icone">ME</span>ManageEdu</div>
+      <p class="subtitulo">CRM educacional de captação e matrículas</p>
+
+      <div id="erro-login" class="erro-formulario oculto"></div>
+
+      <form id="form-login">
+        <div class="campo">
+          <label for="email">E-mail</label>
+          <input type="email" id="email" name="email" placeholder="nome@instituicao.com" required autocomplete="username">
+        </div>
+        <div class="campo">
+          <label for="senha">Senha</label>
+          <input type="password" id="senha" name="senha" required autocomplete="current-password">
+        </div>
+        <button type="submit" class="btn btn-primario">Entrar</button>
+      </form>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/login.js"></script>
+</body>
+</html>

@@ -13,20 +13,20 @@ A API utiliza **autenticação por sessão HTTP** (`JSESSIONID`) gerenciada pelo
    - `fetch`: `credentials: "include"`
    - `axios`: `withCredentials: true`
 2. **CSRF (`XSRF-TOKEN`)**:
-   - Antes de fazer requisições `POST`, `PUT`, `PATCH` ou `DELETE` autenticadas, garanta que o cookie `XSRF-TOKEN` foi recebido (ex.: chamando `GET /api/auth/csrf` ao iniciar o app ou após o login).
+   - Antes de fazer requisições `POST`, `PUT`, `PATCH` ou `DELETE` autenticadas, garanta que o cookie `XSRF-TOKEN` foi recebido (ex.: chamando `GET /api/csrf-token` ao iniciar o app ou após o login).
    - Leia o valor do cookie `XSRF-TOKEN` e envie no header **`X-XSRF-TOKEN`** em toda requisição de escrita (`POST`, `PUT`, `PATCH`, `DELETE`).
-   - *(Exceção: `/api/auth/login` e `/api/auth/logout` não exigem o header CSRF.)*
+   - *(Exceção: `POST /api/sessoes` e `DELETE /api/sessoes/atual` não exigem o header CSRF.)*
 
-### Endpoints de Autenticação (`/api/auth`)
+### Endpoints de Sessão (`/api/sessoes`)
 
 | Método | Rota | Acesso | Descrição |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/auth/csrf` | Público | Emite o cookie `XSRF-TOKEN` (`204 No Content`) |
-| `POST` | `/api/auth/login` | Público | Autentica e cria sessão (`JSESSIONID`) |
-| `POST` | `/api/auth/logout` | Público | Encerra a sessão (`204 No Content`) |
-| `GET` | `/api/auth/me` | Autenticado | Retorna os dados do usuário logado |
+| `GET` | `/api/csrf-token` | Público | Emite o cookie `XSRF-TOKEN` (`204 No Content`) |
+| `POST` | `/api/sessoes` | Público | Autentica e cria sessão (`JSESSIONID`) (`201 Created`) |
+| `DELETE` | `/api/sessoes/atual` | Público | Encerra a sessão (`204 No Content`) |
+| `GET` | `/api/sessoes/atual` | Autenticado | Retorna os dados do usuário logado |
 
-**Exemplo `POST /api/auth/login`:**
+**Exemplo `POST /api/sessoes`:**
 ```json
 {
   "email": "admin@manageedu.com",
@@ -54,7 +54,7 @@ A API utiliza **autenticação por sessão HTTP** (`JSESSIONID`) gerenciada pelo
 | `GET` | `/api/usuarios` | Lista todos os usuários |
 | `GET` | `/api/usuarios/{id}` | Busca usuário por ID |
 | `PUT` | `/api/usuarios/{id}` | Atualiza dados (campo `senha` é opcional na edição) |
-| `PATCH` | `/api/usuarios/{id}/ativo?ativo=false` | Ativa ou desativa usuário |
+| `PATCH` | `/api/usuarios/{id}` | Ativa ou desativa usuário (corpo `{ "ativo": false }`) |
 
 **Exemplo `POST /api/usuarios`:**
 ```json
@@ -124,7 +124,7 @@ A API utiliza **autenticação por sessão HTTP** (`JSESSIONID`) gerenciada pelo
 | `GET` | `/api/oportunidades/{id}` | Busca por ID |
 | `PUT` | `/api/oportunidades/{id}` | Atualiza dados básicos |
 | `PATCH` / `PUT` | `/api/oportunidades/{id}/status` | Avança/altera status |
-| `POST` | `/api/oportunidades/{id}/reabrir` | Reabre oportunidade em `DESISTENCIA` (somente `ADMINISTRADOR`) |
+| `POST` | `/api/oportunidades/{id}/reaberturas` | Reabre oportunidade em `DESISTENCIA` (somente `ADMINISTRADOR`) |
 | `DELETE` | `/api/oportunidades/{id}` | Remove oportunidade (`204 No Content`) |
 
 **Exemplo `POST /api/oportunidades`:**
@@ -146,7 +146,7 @@ A API utiliza **autenticação por sessão HTTP** (`JSESSIONID`) gerenciada pelo
 ```
 *(Regra de perfil: `OPERADOR_CAPTACAO` não pode alterar para `MATRICULA_CONFIRMADA`.)*
 
-**Exemplo `POST /api/oportunidades/{id}/reabrir`:**
+**Exemplo `POST /api/oportunidades/{id}/reaberturas`:**
 ```json
 {
   "justificativa": "Candidato retornou contato solicitando nova proposta."
@@ -167,7 +167,7 @@ Envio via `multipart/form-data` com o campo **`arquivo`**.
 | `GET` | `/api/leads/{leadId}/anexos` | Lista anexos do lead |
 | `POST` | `/api/oportunidades/{oportunidadeId}/anexos` | Envia anexo da oportunidade (PDF, JPG, PNG — máx. 10 MB) |
 | `GET` | `/api/oportunidades/{oportunidadeId}/anexos` | Lista anexos da oportunidade |
-| `GET` | `/api/anexos/{id}/download` | Faz download do arquivo (`attachment`) |
+| `GET` | `/api/anexos/{id}/arquivo` | Faz download do arquivo (`attachment`) |
 | `DELETE` | `/api/anexos/{id}` | Remove anexo/foto (`204 No Content`) |
 
 **Exemplo de resposta de upload (`201 Created`):**
@@ -181,7 +181,7 @@ Envio via `multipart/form-data` com o campo **`arquivo`**.
   "leadId": 1,
   "oportunidadeId": null,
   "dataUpload": "2026-11-13T15:20:00",
-  "urlDownload": "/api/anexos/10/download"
+  "urlDownload": "/api/anexos/10/arquivo"
 }
 ```
 
@@ -207,7 +207,7 @@ Todos os erros (`400`, `401`, `403`, `404`, `500`) retornam JSON neste formato:
   "status": 400,
   "erro": "Regra de negócio violada",
   "mensagem": "Somente administradores podem reabrir oportunidades.",
-  "path": "/api/oportunidades/1/reabrir"
+  "path": "/api/oportunidades/1/reaberturas"
 }
 ```
 

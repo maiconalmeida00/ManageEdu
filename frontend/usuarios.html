@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Usuários · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="conteudo">
+    <div class="cabecalho-pagina">
+      <div>
+        <h1>Usuários</h1>
+        <p>Quem tem acesso ao sistema</p>
+      </div>
+      <button class="btn btn-primario" id="botao-novo">+ Novo usuário</button>
+    </div>
+
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>E-mail</th>
+            <th>Perfil</th>
+            <th>Situação</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-usuarios">
+          <tr><td colspan="5" class="carregando">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/usuarios.js"></script>
+</body>
+</html>

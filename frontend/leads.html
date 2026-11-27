@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Leads · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="conteudo">
+    <div class="cabecalho-pagina">
+      <div>
+        <h1>Leads</h1>
+        <p>Pessoas interessadas nos cursos</p>
+      </div>
+      <button class="btn btn-primario" id="botao-novo">+ Novo lead</button>
+    </div>
+
+    <div class="ferramentas">
+      <input type="search" id="busca" placeholder="Buscar por nome, e-mail ou curso">
+      <select id="filtro-classificacao">
+        <option value="">Todas as classificações</option>
+        <option value="QUENTE">Quente</option>
+        <option value="MORNO">Morno</option>
+        <option value="FRIO">Frio</option>
+      </select>
+    </div>
+
+    <div id="lista-leads" class="grade-cartoes">
+      <p class="carregando">Carregando...</p>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/leads.js"></script>
+</body>
+</html>
