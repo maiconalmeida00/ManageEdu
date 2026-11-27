@@ -11,7 +11,9 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
@@ -89,6 +91,32 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "Arquivo muito grande",
                 "O tamanho do arquivo excede o limite máximo permitido (10 MB).",
+                request
+        );
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleRotaInexistente(
+            NoResourceFoundException ex,
+            HttpServletRequest request
+    ) {
+        return buildError(
+                HttpStatus.NOT_FOUND,
+                "Recurso não encontrado",
+                "A rota solicitada não existe.",
+                request
+        );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMetodoNaoSuportado(
+            HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest request
+    ) {
+        return buildError(
+                HttpStatus.METHOD_NOT_ALLOWED,
+                "Método não permitido",
+                "O método " + ex.getMethod() + " não é suportado nesta rota.",
                 request
         );
     }

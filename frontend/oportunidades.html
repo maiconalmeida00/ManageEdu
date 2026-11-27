@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funil · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="conteudo">
+    <div class="cabecalho-pagina">
+      <div>
+        <h1>Funil de matrícula</h1>
+        <p>Acompanhe cada oportunidade da primeira conversa até a matrícula</p>
+      </div>
+      <button class="btn btn-primario" id="botao-novo">+ Nova oportunidade</button>
+    </div>
+
+    <div class="filtros-status" id="filtros-status"></div>
+
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+          <tr>
+            <th>Lead</th>
+            <th>Curso</th>
+            <th>Valor estimado</th>
+            <th>Data prevista</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-oportunidades">
+          <tr><td colspan="6" class="carregando">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/oportunidades.js"></script>
+</body>
+</html>

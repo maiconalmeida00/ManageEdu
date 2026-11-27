@@ -79,7 +79,7 @@ public class AnexoController {
         return anexoUseCase.listarAnexosOportunidade(oportunidadeId);
     }
 
-    @GetMapping("/anexos/{id}/download")
+    @GetMapping("/anexos/{id}/arquivo")
     public ResponseEntity<Resource> download(@PathVariable Long id) {
         return buildFileResponse(anexoUseCase.buscarParaDownload(id), "attachment");
     }

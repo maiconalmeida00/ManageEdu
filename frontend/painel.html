@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Painel · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="conteudo">
+    <div class="cabecalho-pagina">
+      <div>
+        <h1 id="saudacao">Painel</h1>
+        <p>Resumo da captação e do funil de matrículas</p>
+      </div>
+      <a class="btn btn-primario" href="leads.html">+ Novo lead</a>
+    </div>
+
+    <section class="grade-metricas">
+      <div class="cartao metrica"><div class="rotulo">Cursos</div><div class="valor" id="total-cursos">—</div></div>
+      <div class="cartao metrica"><div class="rotulo">Leads</div><div class="valor" id="total-leads">—</div></div>
+      <div class="cartao metrica"><div class="rotulo">Oportunidades em andamento</div><div class="valor" id="total-andamento">—</div></div>
+      <div class="cartao metrica"><div class="rotulo">Matrículas confirmadas</div><div class="valor destaque" id="total-matriculas">—</div></div>
+    </section>
+
+    <section class="grade-2">
+      <div class="cartao">
+        <h2>Funil de matrícula</h2>
+        <div id="grafico-funil"><p class="carregando">Carregando...</p></div>
+      </div>
+      <div class="cartao">
+        <h2>Leads mais recentes</h2>
+        <div id="ultimos-leads"><p class="carregando">Carregando...</p></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/painel.js"></script>
+</body>
+</html>

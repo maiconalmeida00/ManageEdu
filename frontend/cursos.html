@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cursos · ManageEdu</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <main class="conteudo">
+    <div class="cabecalho-pagina">
+      <div>
+        <h1>Cursos</h1>
+        <p>Cursos oferecidos pela instituição</p>
+      </div>
+      <button class="btn btn-primario" id="botao-novo">+ Novo curso</button>
+    </div>
+
+    <div class="ferramentas">
+      <input type="search" id="busca" placeholder="Buscar curso pelo nome">
+    </div>
+
+    <div class="tabela-caixa">
+      <table>
+        <thead>
+          <tr>
+            <th>Nome</th>
+            <th>Modalidade</th>
+            <th>Turno</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tabela-cursos">
+          <tr><td colspan="4" class="carregando">Carregando...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script src="js/comum.js"></script>
+  <script src="js/cursos.js"></script>
+</body>
+</html>

@@ -1,6 +1,8 @@
 package com.enterprise.manageedu.adapters.rest;
 
+import com.enterprise.manageedu.application.dto.AlterarAtivoUsuarioDTO;
 import com.enterprise.manageedu.application.dto.UsuarioRequestDTO;
+import com.enterprise.manageedu.domain.exception.RegraDeNegocioException;
 import com.enterprise.manageedu.application.dto.UsuarioResponseDTO;
 import com.enterprise.manageedu.application.usecase.UsuarioUseCase;
 import com.enterprise.manageedu.domain.model.Usuario;
@@ -13,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -57,13 +58,16 @@ public class UsuarioController {
         return usuarioUseCase.atualizar(id, request, obterUsuarioAutenticado(authentication));
     }
 
-    @PatchMapping("/{id}/ativo")
+    @PatchMapping("/{id}")
     public UsuarioResponseDTO alterarAtivo(
             @PathVariable Long id,
-            @RequestParam boolean ativo,
+            @RequestBody AlterarAtivoUsuarioDTO request,
             Authentication authentication
     ) {
-        return usuarioUseCase.alterarAtivo(id, ativo, obterUsuarioAutenticado(authentication));
+        if (request == null || request.ativo() == null) {
+            throw new RegraDeNegocioException("O campo ativo é obrigatório.");
+        }
+        return usuarioUseCase.alterarAtivo(id, request.ativo(), obterUsuarioAutenticado(authentication));
     }
 
     private Usuario obterUsuarioAutenticado(Authentication authentication) {
