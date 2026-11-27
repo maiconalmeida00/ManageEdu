@@ -12,6 +12,8 @@ frontend/
 ├── leads.html            CRUD de leads, foto e anexos
 ├── oportunidades.html    Funil: criação, mudança de status, reabertura e anexos
 ├── usuarios.html         Gestão de usuários (somente administrador)
+├── servidor.js           Servidor local em Node (npm start)
+├── package.json          Script de inicialização
 ├── css/style.css         Estilo único do sistema
 └── js/
     ├── api.js            Comunicação com o backend (sessão + CSRF)
@@ -22,11 +24,13 @@ frontend/
 ## Como executar
 
 1. Suba o backend (porta `8080`), conforme o `backend/README.md`.
-2. Sirva esta pasta na porta **5173**. O backend só aceita requisições (CORS) vindas de `http://localhost:5173`:
+2. Na pasta `frontend`, inicie o servidor (precisa só do Node.js instalado, sem baixar nenhuma dependência):
 
 ```powershell
-python -m http.server 5173 --bind localhost --directory frontend
+npm start
 ```
+
+O servidor roda na porta **5173**, porque o backend só aceita requisições (CORS) vindas de `http://localhost:5173`. Para parar, use `Ctrl+C`.
 
 3. Acesse **http://localhost:5173**. Use `localhost`, e não `127.0.0.1`, senão o cookie de sessão não funciona.
 
