@@ -40,6 +40,9 @@ backend/.vscode/
 
 # Logs
 backend/logs/
+
+# Arquivos enviados pela aplicação (fotos e anexos)
+backend/uploads/
 backend/*.log
 
 # ==========================================

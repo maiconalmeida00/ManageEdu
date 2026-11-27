@@ -137,7 +137,7 @@ A documentação interativa Swagger UI estará acessível em `http://localhost:8
 | `GET` | `/api/oportunidades/{id}` | Buscar oportunidade por ID | `200 OK` |
 | `PUT` | `/api/oportunidades/{id}` | Atualizar dados cadastrais da oportunidade | `200 OK` |
 | `PATCH` ou `PUT` | `/api/oportunidades/{id}/status` | Alterar etapa/status no funil | `200 OK` |
-| `POST` | `/api/oportunidades/{id}/reabrir` | Reabrir oportunidade em desistência | `200 OK` |
+| `POST` | `/api/oportunidades/{id}/reaberturas` | Reabrir oportunidade em desistência | `201 Created` |
 | `DELETE` | `/api/oportunidades/{id}` | Excluir oportunidade | `204 No Content` |
 
 #### Exemplo de criação de oportunidade (`POST /api/oportunidades`):
@@ -159,7 +159,7 @@ Header opcional: `X-User-Role: ADMIN` (padrão) ou `X-User-Role: OPERADOR`.
 }
 ```
 
-#### Reabertura de oportunidade (`POST /api/oportunidades/{id}/reabrir`):
+#### Reabertura de oportunidade (`POST /api/oportunidades/{id}/reaberturas`):
 Header opcional: `X-User-Role: ADMIN` (apenas Administradores podem reabrir).
 ```json
 {

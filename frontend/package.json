@@ -1,0 +1,9 @@
+{
+  "name": "manageedu-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Frontend do ManageEdu (HTML, CSS e JavaScript puros)",
+  "scripts": {
+    "start": "node servidor.js"
+  }
+}

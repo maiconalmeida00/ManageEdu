@@ -118,7 +118,8 @@ public class OportunidadeController {
         return atualizada;
     }
 
-    @PostMapping("/{id}/reabrir")
+    @PostMapping("/{id}/reaberturas")
+    @ResponseStatus(HttpStatus.CREATED)
     public OportunidadeMatriculaResponseDTO reabrir(
             @PathVariable Long id,
             @RequestBody ReaberturaOportunidadeRequestDTO request,
